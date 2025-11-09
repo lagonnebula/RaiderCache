@@ -18,7 +18,7 @@ Interactive loot decision tool for Arc Raiders - quickly determine what to keep,
 
 ## 🚀 Quick Start
 
-Visit the live app: [https://YOUR_USERNAME.github.io/ArcRaidersLootList/](https://YOUR_USERNAME.github.io/ArcRaidersLootList/)
+Visit the live app: [https://otdavies.github.io/RaiderCache/](https://otdavies.github.io/RaiderCache/)
 
 ### Local Development
 
