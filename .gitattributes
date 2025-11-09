@@ -1,0 +1,7 @@
+# Git LFS configuration for Arc Raiders Loot List
+
+# Track all PNG icons with LFS
+public/assets/icons/*.png filter=lfs diff=lfs merge=lfs -text
+
+# Track large data files
+*.json filter=lfs diff=lfs merge=lfs -text
