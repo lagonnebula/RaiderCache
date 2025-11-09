@@ -101,9 +101,21 @@ All Arc Raiders game content © Embark Studios AB.
 
 ## 🙏 Credits
 
-- Data: [RaidTheory/arcraiders-data](https://github.com/RaidTheory/arcraiders-data)
-- Game: [Arc Raiders](https://arcraiders.com) by Embark Studios
-- Icons: AI-upscaled from in-game screenshots (RaidTheory)
+### Data & Icons
+- **Primary Data Source**: [RaidTheory/arcraiders-data](https://github.com/RaidTheory/arcraiders-data)
+  - Comprehensive item, quest, hideout, and project data
+  - AI-upscaled item icons from in-game screenshots
+  - Community-maintained with regular updates
+
+### Additional Resources
+- **Game Content**: All Arc Raiders game content © [Embark Studios AB](https://www.embark-studios.com/)
+- **Official Game**: [Arc Raiders](https://arcraiders.com)
+- **Community APIs**: [MetaForge](https://metaforge.app/arc-raiders) for supplementary data
+
+### Special Thanks
+- RaidTheory team for maintaining the open-source data repository
+- Arc Raiders community for ongoing support and contributions
+- Embark Studios for creating Arc Raiders
 
 ---
 
