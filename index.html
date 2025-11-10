@@ -34,63 +34,65 @@
 
           <!-- Main Content Area -->
           <div class="main-content">
-            <!-- Search and Filter Bar -->
+            <!-- Search and Sort Toolbar -->
+            <div class="toolbar">
+              <div class="toolbar-left">
+                <div class="sort-toolbar">
+                  <select id="sort-selector" class="sort-select">
+                    <option value="name">Name</option>
+                    <option value="value">Value</option>
+                    <option value="rarity">Rarity</option>
+                    <option value="weight">Weight</option>
+                    <option value="decision">Decision</option>
+                  </select>
+                  <button id="sort-direction-btn" class="sort-direction-btn" title="Sort ascending">↑</button>
+                </div>
+              </div>
+
+              <div class="toolbar-right">
+                <input
+                  type="search"
+                  id="search"
+                  placeholder="Search items..."
+                  class="search-input-main"
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+
+            <!-- Filters -->
             <div class="controls collapsible">
               <h3 class="collapsible-header" data-target="search-content">
-                <span>Search & Filters</span>
+                <span>Filters</span>
                 <span class="collapse-icon">▼</span>
               </h3>
               <div class="collapsible-content" id="search-content">
-                <div class="search-bar">
-                  <input
-                    type="search"
-                    id="search"
-                    placeholder="Search items..."
-                    class="search-input"
-                    autocomplete="off"
-                  />
-                </div>
-
                 <div class="filters" id="filters">
-                <div class="filter-group">
-                  <label class="filter-label">Decision:</label>
-                  <div class="filter-buttons" id="decision-filter"></div>
-                </div>
+                  <div class="filter-group">
+                    <label class="filter-label">Decision:</label>
+                    <div class="filter-buttons" id="decision-filter"></div>
+                  </div>
 
-                <div class="filter-group">
-                  <label class="filter-label">Rarity:</label>
-                  <div class="filter-buttons" id="rarity-filter"></div>
-                </div>
+                  <div class="filter-group">
+                    <label class="filter-label">Rarity:</label>
+                    <div class="filter-buttons" id="rarity-filter"></div>
+                  </div>
 
-                <div class="filter-group">
-                  <label class="filter-label">Category:</label>
-                  <select id="category-filter" class="filter-select">
-                    <option value="">All Categories</option>
-                  </select>
-                </div>
-
-                <div class="filter-group">
-                  <label class="filter-label">Sort by:</label>
-                  <div class="sort-controls">
-                    <select id="sort-selector" class="filter-select">
-                      <option value="name">Name</option>
-                      <option value="value">Value</option>
-                      <option value="rarity">Rarity</option>
-                      <option value="weight">Weight</option>
-                      <option value="decision">Decision</option>
+                  <div class="filter-group">
+                    <label class="filter-label">Category:</label>
+                    <select id="category-filter" class="filter-select">
+                      <option value="">All Categories</option>
                     </select>
-                    <button id="sort-direction-btn" class="sort-direction-btn" title="Sort ascending">↑</button>
+                  </div>
+
+                  <div class="filter-group">
+                    <label class="filter-label">
+                      <input type="checkbox" id="group-weapons" checked />
+                      Group weapon tiers (show only highest)
+                    </label>
                   </div>
                 </div>
-
-                <div class="filter-group">
-                  <label class="filter-label">
-                    <input type="checkbox" id="group-weapons" checked />
-                    Group weapon tiers (show only highest)
-                  </label>
-                </div>
               </div>
-            </div>
             </div>
 
             <!-- Items Grid -->
