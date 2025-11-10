@@ -821,8 +821,9 @@ body {
 .item-card.rarity-common {
   border-color: rgba(158, 158, 158, 0.4);
   background: linear-gradient(135deg,
-    rgba(158, 158, 158, 0.08) 0%,
-    var(--color-bg-dark) 100%);
+    rgba(158, 158, 158, 0.15) 0%,
+    rgba(158, 158, 158, 0.05) 50%,
+    var(--color-bg-dark) 100%) !important;
 }
 
 .item-card.rarity-common .item-card__rarity-badge {
@@ -832,8 +833,9 @@ body {
 .item-card.rarity-uncommon {
   border-color: rgba(76, 175, 80, 0.5);
   background: linear-gradient(135deg,
-    rgba(76, 175, 80, 0.1) 0%,
-    var(--color-bg-dark) 100%);
+    rgba(76, 175, 80, 0.18) 0%,
+    rgba(76, 175, 80, 0.06) 50%,
+    var(--color-bg-dark) 100%) !important;
 }
 
 .item-card.rarity-uncommon .item-card__rarity-badge {
@@ -843,8 +845,9 @@ body {
 .item-card.rarity-rare {
   border-color: rgba(33, 150, 243, 0.5);
   background: linear-gradient(135deg,
-    rgba(33, 150, 243, 0.1) 0%,
-    var(--color-bg-dark) 100%);
+    rgba(33, 150, 243, 0.18) 0%,
+    rgba(33, 150, 243, 0.06) 50%,
+    var(--color-bg-dark) 100%) !important;
 }
 
 .item-card.rarity-rare .item-card__rarity-badge {
@@ -854,8 +857,9 @@ body {
 .item-card.rarity-epic {
   border-color: rgba(156, 39, 176, 0.5);
   background: linear-gradient(135deg,
-    rgba(156, 39, 176, 0.1) 0%,
-    var(--color-bg-dark) 100%);
+    rgba(156, 39, 176, 0.18) 0%,
+    rgba(156, 39, 176, 0.06) 50%,
+    var(--color-bg-dark) 100%) !important;
 }
 
 .item-card.rarity-epic .item-card__rarity-badge {
@@ -865,8 +869,9 @@ body {
 .item-card.rarity-legendary {
   border-color: rgba(255, 152, 0, 0.6);
   background: linear-gradient(135deg,
-    rgba(255, 152, 0, 0.12) 0%,
-    var(--color-bg-dark) 100%);
+    rgba(255, 152, 0, 0.2) 0%,
+    rgba(255, 152, 0, 0.08) 50%,
+    var(--color-bg-dark) 100%) !important;
 }
 
 .item-card.rarity-legendary .item-card__rarity-badge {
@@ -927,9 +932,39 @@ body {
   align-items: center;
   justify-content: center;
   padding: 0.2rem;
-  background: linear-gradient(135deg, var(--color-bg-dark) 0%, var(--color-bg-elevated) 100%);
+  background: var(--color-bg-dark);
   position: relative;
   overflow: hidden;
+}
+
+.item-card.rarity-common .item-card__image-container {
+  background: linear-gradient(135deg,
+    rgba(158, 158, 158, 0.12) 0%,
+    var(--color-bg-dark) 100%);
+}
+
+.item-card.rarity-uncommon .item-card__image-container {
+  background: linear-gradient(135deg,
+    rgba(76, 175, 80, 0.15) 0%,
+    var(--color-bg-dark) 100%);
+}
+
+.item-card.rarity-rare .item-card__image-container {
+  background: linear-gradient(135deg,
+    rgba(33, 150, 243, 0.15) 0%,
+    var(--color-bg-dark) 100%);
+}
+
+.item-card.rarity-epic .item-card__image-container {
+  background: linear-gradient(135deg,
+    rgba(156, 39, 176, 0.15) 0%,
+    var(--color-bg-dark) 100%);
+}
+
+.item-card.rarity-legendary .item-card__image-container {
+  background: linear-gradient(135deg,
+    rgba(255, 152, 0, 0.18) 0%,
+    var(--color-bg-dark) 100%);
 }
 
 .item-card__image {
