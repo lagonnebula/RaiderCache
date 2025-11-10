@@ -27,48 +27,43 @@ export class DecisionEngine {
    * Main decision logic - determines if player should keep, recycle, or sell an item
    */
   getDecision(item: Item, userProgress: UserProgress): DecisionReason {
-    // Priority 0: Lower tier weapons - ALWAYS RECYCLE
-    if (WeaponGrouper.isWeaponVariant(item)) {
-      const tierNumber = WeaponGrouper.getTierNumber(item.id);
-
-      // Recycle tier I and II weapons
-      if (tierNumber <= 2) {
-        return {
-          decision: 'sell_or_recycle',
-          confidence: 95,
-          reasons: [
-            `Tier ${tierNumber} weapon - upgrade to higher tiers`,
-            'Lower tier weapons become obsolete'
-          ]
-        };
-      }
-
-      // Tier III is situational
-      if (tierNumber === 3) {
-        return {
-          decision: 'situational',
-          confidence: 70,
-          reasons: [
-            'Mid-tier weapon',
-            'Keep if you lack better weapons, otherwise recycle'
-          ]
-        };
-      }
-
-      // Tier IV+ are worth keeping until you get better
-      if (tierNumber >= 4) {
-        return {
-          decision: 'keep',
-          confidence: 85,
-          reasons: [
-            `High-tier weapon (Tier ${tierNumber})`,
-            'Solid endgame weapon'
-          ]
-        };
-      }
+    // Priority 0: Blueprints - ALWAYS REVIEW
+    if (item.type === 'Blueprint') {
+      return {
+        decision: 'situational',
+        confidence: 100,
+        reasons: [
+          'Blueprint - valuable for unlocking crafting recipes',
+          'Review carefully before selling or recycling'
+        ]
+      };
     }
 
-    // Priority 1: Quest items (ALWAYS KEEP)
+    // Priority 1: All weapons - ALWAYS REVIEW
+    if (item.type === 'Weapon' || WeaponGrouper.isWeaponVariant(item)) {
+      return {
+        decision: 'situational',
+        confidence: 90,
+        reasons: [
+          'Weapon - review based on your current loadout',
+          'Consider tier and your play style'
+        ]
+      };
+    }
+
+    // Priority 2: Quick Use items (grenades, healing items, etc.) - ALWAYS REVIEW
+    if (item.type === 'Quick Use') {
+      return {
+        decision: 'situational',
+        confidence: 90,
+        reasons: [
+          'Consumable item - grenades, healing items, etc.',
+          'Review based on your current inventory needs'
+        ]
+      };
+    }
+
+    // Priority 3: Quest items (ALWAYS KEEP)
     const questUse = this.isUsedInActiveQuests(item, userProgress);
     if (questUse.isUsed) {
       return {
@@ -79,7 +74,7 @@ export class DecisionEngine {
       };
     }
 
-    // Priority 2: Project items (KEEP if projects not completed)
+    // Priority 4: Project items (KEEP if projects not completed)
     const projectUse = this.isUsedInActiveProjects(item, userProgress);
     if (projectUse.isUsed) {
       return {
@@ -90,7 +85,7 @@ export class DecisionEngine {
       };
     }
 
-    // Priority 3: Hideout upgrade materials (KEEP if needed)
+    // Priority 5: Hideout upgrade materials (KEEP if needed)
     const upgradeUse = this.isNeededForUpgrades(item, userProgress);
     if (upgradeUse.isNeeded) {
       return {
@@ -103,7 +98,7 @@ export class DecisionEngine {
       };
     }
 
-    // Priority 4: Crafting materials (SITUATIONAL based on rarity and use)
+    // Priority 6: Crafting materials (SITUATIONAL based on rarity and use)
     if (item.recipe && item.recipe.length > 0) {
       const craftingValue = this.evaluateCraftingValue(item);
       if (craftingValue.isValuable) {
@@ -118,7 +113,7 @@ export class DecisionEngine {
       }
     }
 
-    // Priority 5: High value trinkets/items (SELL OR RECYCLE)
+    // Priority 7: High value trinkets/items (SELL OR RECYCLE)
     if (this.isHighValueTrinket(item)) {
       return {
         decision: 'sell_or_recycle',
@@ -130,7 +125,7 @@ export class DecisionEngine {
       };
     }
 
-    // Priority 6: Items that recycle into valuable materials (SELL OR RECYCLE)
+    // Priority 8: Items that recycle into valuable materials (SELL OR RECYCLE)
     if (item.recyclesInto && item.recyclesInto.length > 0) {
       const recycleValue = this.evaluateRecycleValue(item);
       if (recycleValue.isValuable) {
@@ -145,7 +140,7 @@ export class DecisionEngine {
       }
     }
 
-    // Priority 7: Rare/Epic/Legendary items (SITUATIONAL - player decision)
+    // Priority 9: Rare/Epic/Legendary items (SITUATIONAL - player decision)
     if (item.rarity && ['rare', 'epic', 'legendary'].includes(item.rarity)) {
       return {
         decision: 'situational',
