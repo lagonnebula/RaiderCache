@@ -3,7 +3,7 @@
 Interactive loot decision tool for Arc Raiders - quickly determine what to keep, recycle, or sell.
 
 ![Arc Raiders Logo](https://img.shields.io/badge/Arc%20Raiders-Loot%20Tool-00bcd4?style=for-the-badge)
-![Build Status](https://img.shields.io/github/actions/workflow/status/otdavies/ArcRaidersLootList/deploy.yml?style=flat-square)
+![Build Status](https://img.shields.io/github/actions/workflow/status/otdavies/RaiderCache/deploy.yml?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 
 ## 🎮 Features
