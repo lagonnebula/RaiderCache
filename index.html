@@ -70,6 +70,17 @@
                 </div>
 
                 <div class="filter-group">
+                  <label class="filter-label">Sort by:</label>
+                  <select id="sort-selector" class="filter-select">
+                    <option value="name">Name</option>
+                    <option value="value">Value (High to Low)</option>
+                    <option value="rarity">Rarity (Legendary First)</option>
+                    <option value="weight">Weight (Low to High)</option>
+                    <option value="decision">Decision (Keep First)</option>
+                  </select>
+                </div>
+
+                <div class="filter-group">
                   <label class="filter-label">
                     <input type="checkbox" id="group-weapons" checked />
                     Group weapon tiers (show only highest)

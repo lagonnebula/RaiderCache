@@ -252,12 +252,16 @@ class App {
       const currentLevel = this.userProgress.hideoutLevels[module.id] ?? 0;
       const moduleName = module.name['en'] || module.name[Object.keys(module.name)[0]];
 
+      const getLevelText = (level: number) => {
+        return level === 0 ? 'Not Unlocked' : `Level ${level} / ${module.maxLevel}`;
+      };
+
       const card = document.createElement('div');
       card.className = 'workshop-card';
       card.innerHTML = `
         <h3>${moduleName}</h3>
         <div class="workshop-card__level">
-          <span class="workshop-card__level-text">Level ${currentLevel} / ${module.maxLevel}</span>
+          <span class="workshop-card__level-text">${getLevelText(currentLevel)}</span>
           <input
             type="range"
             min="0"
@@ -274,7 +278,7 @@ class App {
 
       slider.addEventListener('input', (e) => {
         const newLevel = parseInt((e.target as HTMLInputElement).value);
-        levelText.textContent = `Level ${newLevel} / ${module.maxLevel}`;
+        levelText.textContent = getLevelText(newLevel);
       });
 
       slider.addEventListener('change', (e) => {
@@ -331,8 +335,44 @@ class App {
       items = WeaponGrouper.filterToHighestTiers(items);
     }
 
+    // Sort items
+    items = this.sortItems(items);
+
     this.filteredItems = items;
     this.render();
+  }
+
+  private sortItems(items: SearchableItem[]): SearchableItem[] {
+    const rarityOrder = { legendary: 5, epic: 4, rare: 3, uncommon: 2, common: 1 };
+    const decisionOrder = { keep: 3, situational: 2, sell_or_recycle: 1 };
+
+    return [...items].sort((a, b) => {
+      switch (this.filters.sortBy) {
+        case 'name':
+          const nameA = a.name['en'] || Object.values(a.name)[0] || '';
+          const nameB = b.name['en'] || Object.values(b.name)[0] || '';
+          return nameA.localeCompare(nameB);
+
+        case 'value':
+          return (b.value || 0) - (a.value || 0); // Descending
+
+        case 'rarity':
+          const rarityA = rarityOrder[a.rarity as keyof typeof rarityOrder] || 0;
+          const rarityB = rarityOrder[b.rarity as keyof typeof rarityOrder] || 0;
+          return rarityB - rarityA; // Descending (legendary first)
+
+        case 'weight':
+          return (a.weightKg || 0) - (b.weightKg || 0); // Ascending
+
+        case 'decision':
+          const decisionA = decisionOrder[a.decisionData.decision as keyof typeof decisionOrder] || 0;
+          const decisionB = decisionOrder[b.decisionData.decision as keyof typeof decisionOrder] || 0;
+          return decisionB - decisionA; // Descending (keep first)
+
+        default:
+          return 0;
+      }
+    });
   }
 
   private render() {
