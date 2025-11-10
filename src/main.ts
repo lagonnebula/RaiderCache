@@ -364,31 +364,10 @@ class App {
       }
     });
 
-    // Mount to main content area
-    const mainContent = document.querySelector('main');
-    if (mainContent) {
-      this.zoneFilter.mount(mainContent);
-    }
-
-    // Add toggle button to header
-    const viewToggle = document.querySelector('.view-toggle');
-    if (viewToggle) {
-      const zoneToggleBtn = document.createElement('button');
-      zoneToggleBtn.className = 'toggle-btn';
-      zoneToggleBtn.dataset.view = 'zones';
-      zoneToggleBtn.innerHTML = '🗺️';
-      zoneToggleBtn.title = 'Zone Filter';
-
-      zoneToggleBtn.addEventListener('click', () => {
-        this.zoneFilter.toggle();
-
-        // Update button active state
-        document.querySelectorAll('.toggle-btn').forEach(btn => {
-          btn.classList.toggle('active', btn === zoneToggleBtn);
-        });
-      });
-
-      viewToggle.insertBefore(zoneToggleBtn, viewToggle.firstChild);
+    // Mount to zone filter container in sidebar
+    const zoneFilterContainer = document.getElementById('zone-filter-container');
+    if (zoneFilterContainer) {
+      this.zoneFilter.mount(zoneFilterContainer);
     }
   }
 

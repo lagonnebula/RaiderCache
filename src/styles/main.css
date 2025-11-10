@@ -213,7 +213,7 @@ body {
   cursor: pointer;
   background: var(--color-bg-elevated);
   user-select: none;
-  transition: background var(--transition-fast);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -222,12 +222,13 @@ body {
 }
 
 .collapsible-header:hover {
-  background: var(--color-bg-card);
+  background: color-mix(in srgb, var(--color-bg-elevated) 90%, var(--color-accent-cyan));
 }
 
 .collapse-icon {
-  transition: transform var(--transition-base);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   font-size: 0.7rem;
+  opacity: 0.7;
 }
 
 .collapsible.collapsed .collapse-icon {
@@ -235,15 +236,24 @@ body {
 }
 
 .collapsible-content {
-  max-height: 2000px;
-  overflow: hidden;
-  transition: max-height var(--transition-slow);
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
   padding: var(--spacing-md);
+  opacity: 1;
+}
+
+.collapsible-content > * {
+  overflow: hidden;
 }
 
 .collapsible.collapsed .collapsible-content {
-  max-height: 0;
-  padding: 0 var(--spacing-md);
+  grid-template-rows: 0fr;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
 }
 
 /* ========================================
@@ -1460,178 +1470,112 @@ body {
    Zone Filter & Location Components
    ======================================== */
 
-.zone-filter {
-  background: var(--color-bg-card);
-  border-radius: var(--radius-md);
-  padding: var(--spacing-xl);
-  margin-bottom: var(--spacing-xl);
+/* Sidebar Zone Filter */
+.zone-filter-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
-.zone-filter__content {
-  max-width: 1400px;
-  margin: 0 auto;
+.zone-clear-btn {
+  width: 100%;
+  padding: var(--spacing-sm);
+  background: var(--color-accent-orange);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.zone-filter__header {
+.zone-clear-btn:hover {
+  background: color-mix(in srgb, var(--color-accent-orange) 85%, black);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.zone-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.zone-btn {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--spacing-xl);
-}
-
-.zone-filter__header h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-}
-
-.zone-filter__clear {
-  background: var(--color-accent-orange);
-  color: white;
-  border: none;
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition-fast);
-}
-
-.zone-filter__clear:hover {
-  opacity: 0.8;
-  transform: translateY(-2px);
-}
-
-.zone-filter__categories {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2xl);
-}
-
-.zone-filter__category {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-lg);
-}
-
-.zone-filter__category-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin: 0;
-}
-
-.zone-filter__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--spacing-lg);
-}
-
-/* Zone Cards */
-.zone-card {
-  background: var(--color-bg-elevated);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-dark);
   border: 2px solid transparent;
-  border-radius: var(--radius-md);
-  padding: var(--spacing-lg);
-  cursor: pointer;
-  transition: var(--transition-fast);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
   text-align: left;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
 }
 
-.zone-card::before {
+.zone-btn::before {
   content: '';
   position: absolute;
-  top: 0;
   left: 0;
-  width: 4px;
-  height: 100%;
-  background: var(--zone-color, var(--color-text-muted));
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--zone-color);
   opacity: 0.6;
-  transition: var(--transition-fast);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.zone-card:hover:not(:disabled) {
+.zone-btn:hover:not(:disabled) {
   border-color: var(--zone-color);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+  background: color-mix(in srgb, var(--zone-color) 10%, var(--color-bg-dark));
+  transform: translateX(2px);
 }
 
-.zone-card:hover::before {
+.zone-btn:hover::before {
+  width: 4px;
   opacity: 1;
-  width: 6px;
 }
 
-.zone-card--selected {
+.zone-btn--selected {
   border-color: var(--zone-color);
-  background: linear-gradient(
-    135deg,
-    var(--color-bg-elevated) 0%,
-    color-mix(in srgb, var(--zone-color) 10%, var(--color-bg-elevated)) 100%
-  );
-  box-shadow: 0 0 20px color-mix(in srgb, var(--zone-color) 20%, transparent);
+  background: color-mix(in srgb, var(--zone-color) 15%, var(--color-bg-dark));
+  box-shadow: 0 0 12px color-mix(in srgb, var(--zone-color) 25%, transparent);
 }
 
-.zone-card--selected::before {
+.zone-btn--selected::before {
+  width: 4px;
   opacity: 1;
-  width: 6px;
 }
 
-.zone-card--empty {
-  opacity: 0.4;
+.zone-btn--disabled {
+  opacity: 0.3;
   cursor: not-allowed;
 }
 
-.zone-card__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-md);
+.zone-btn__name {
+  flex: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.zone-card__name {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-}
-
-.zone-card__count {
+.zone-btn__count {
   background: var(--zone-color);
   color: white;
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: 12px;
-  font-size: 0.85rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
   font-weight: 700;
-}
-
-.zone-card__description {
-  font-size: 0.85rem;
-  color: var(--color-text-secondary);
-  margin-bottom: var(--spacing-md);
-  line-height: 1.4;
-}
-
-.zone-card__maps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-}
-
-.zone-card__map-badge {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-secondary);
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--radius-sm);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.zone-card__map-badge--all {
-  background: var(--color-accent-cyan);
-  color: white;
+  min-width: 24px;
+  text-align: center;
 }
 
 /* Zone Badges in Item Modal */
