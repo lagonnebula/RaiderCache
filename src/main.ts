@@ -19,6 +19,7 @@ class App {
 
   private searchInput!: HTMLInputElement;
   private itemsGrid!: HTMLElement;
+  private searchDebounceTimer: number | null = null;
   private filters = {
     searchQuery: '',
     decisions: new Set<RecycleDecision>(),
@@ -80,11 +81,21 @@ class App {
   }
 
   private initializeUI() {
-    // Search input
+    // Search input with debouncing
     this.searchInput = document.getElementById('search') as HTMLInputElement;
     this.searchInput.addEventListener('input', (e) => {
       this.filters.searchQuery = (e.target as HTMLInputElement).value;
-      this.applyFilters();
+
+      // Clear existing timer
+      if (this.searchDebounceTimer !== null) {
+        clearTimeout(this.searchDebounceTimer);
+      }
+
+      // Set new timer to apply filters after 300ms of no typing
+      this.searchDebounceTimer = setTimeout(() => {
+        this.applyFilters();
+        this.searchDebounceTimer = null;
+      }, 300) as unknown as number;
     });
 
     // Items grid
