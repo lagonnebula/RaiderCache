@@ -25,11 +25,11 @@ export interface ZoneInfo {
 export const ZONE_INFO: Record<ZoneType, ZoneInfo> = {
   ARC: {
     name: 'ARC',
-    displayName: 'ARC Vendor',
-    description: 'Available from ARC faction vendor',
-    maps: ['Hideout'],
+    displayName: 'ARC',
+    description: 'Looted from ARC enemies',
+    maps: ['All Maps'],
     color: '#3b82f6',
-    category: 'vendor',
+    category: 'enemy',
   },
   Commercial: {
     name: 'Commercial',
