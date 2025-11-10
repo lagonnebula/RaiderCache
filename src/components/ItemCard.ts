@@ -27,7 +27,9 @@ export class ItemCard {
     card.dataset.itemId = item.id;
 
     const iconUrl = dataLoader.getIconUrl(item);
-    const itemName = item.name['en'] || item.name[Object.keys(item.name)[0]];
+    const itemName = item.name?.['en'] || item.name?.[Object.keys(item.name || {})[0]] || '[Unknown Item]';
+    const itemValue = item.value ?? 0;
+    const stackSize = item.stackSize ?? 1;
 
     card.innerHTML = `
       <div class="item-card__header">
@@ -43,7 +45,7 @@ export class ItemCard {
           alt="${itemName}"
           class="item-card__image"
           loading="lazy"
-          onerror="this.style.display='none'"
+          onerror="this.outerHTML='<div class=\\'item-card__placeholder\\'>?</div>'"
         />
       </div>
 
@@ -51,8 +53,8 @@ export class ItemCard {
         <h3 class="item-card__name">${itemName}</h3>
 
         <div class="item-card__meta">
-          <span class="item-card__value">${item.value} <span class="coin-icon">⚡</span></span>
-          ${item.stackSize > 1 ? `<span class="item-card__stack">x${item.stackSize}</span>` : ''}
+          <span class="item-card__value">${itemValue} <span class="coin-icon">⚡</span></span>
+          ${stackSize > 1 ? `<span class="item-card__stack">x${stackSize}</span>` : ''}
         </div>
 
         <div class="decision-badge decision-badge--${decisionData.decision}">

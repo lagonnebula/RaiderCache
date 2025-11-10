@@ -49,8 +49,11 @@ export class ItemModal {
   private renderContent(): string {
     const { item, decisionData } = this.config;
     const iconUrl = dataLoader.getIconUrl(item);
-    const itemName = item.name['en'] || item.name[Object.keys(item.name)[0]];
-    const description = item.description?.['en'] || item.description?.[Object.keys(item.description || {})[0]] || 'No description available';
+    const itemName = item.name?.['en'] || item.name?.[Object.keys(item.name || {})[0]] || '[Unknown Item]';
+    const description = item.description?.['en'] || item.description?.[Object.keys(item.description || {})[0]] || 'No description available.';
+    const itemValue = item.value ?? 0;
+    const itemWeight = item.weightKg ?? 0;
+    const itemStack = item.stackSize ?? 1;
 
     return `
       <div class="item-modal">
@@ -62,13 +65,13 @@ export class ItemModal {
               src="${iconUrl}"
               alt="${itemName}"
               class="item-modal__image"
-              onerror="this.style.display='none'"
+              onerror="this.outerHTML='<div class=\\'item-modal__placeholder\\'>?</div>'"
             />
           </div>
           <div class="item-modal__header-info">
             <h2 class="item-modal__name">${itemName}</h2>
             <div class="item-modal__badges">
-              ${item.rarity ? `<span class="rarity-badge rarity-badge--${item.rarity}">${item.rarity}</span>` : ''}
+              ${item.rarity ? `<span class="rarity-badge rarity-badge--${item.rarity}">${item.rarity}</span>` : '<span class="rarity-badge rarity-badge--unknown">Unknown</span>'}
               <span class="decision-badge decision-badge--${decisionData.decision}">
                 ${this.getDecisionLabel(decisionData.decision)}
               </span>
@@ -107,13 +110,13 @@ export class ItemModal {
               <h3>Properties</h3>
               <dl class="property-list">
                 <dt>Type</dt>
-                <dd>${item.type}</dd>
+                <dd>${item.type || 'Unknown'}</dd>
                 <dt>Value</dt>
-                <dd>${item.value} coins</dd>
+                <dd>${itemValue} coins</dd>
                 <dt>Weight</dt>
-                <dd>${item.weightKg} kg</dd>
+                <dd>${itemWeight} kg</dd>
                 <dt>Stack Size</dt>
-                <dd>${item.stackSize}</dd>
+                <dd>${itemStack}</dd>
               </dl>
             </div>
 
