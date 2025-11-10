@@ -22,7 +22,8 @@ export class ItemCard {
     const { item, decisionData } = this.config;
 
     const card = document.createElement('div');
-    card.className = `item-card rarity-${item.rarity} decision-${decisionData.decision}`;
+    const rarityClass = item.rarity ? `rarity-${item.rarity}` : 'rarity-common';
+    card.className = `item-card ${rarityClass} decision-${decisionData.decision}`;
     card.dataset.itemId = item.id;
 
     const iconUrl = dataLoader.getIconUrl(item);
@@ -113,7 +114,8 @@ export class ItemCard {
     }
   }
 
-  private getRarityLabel(rarity: string): string {
+  private getRarityLabel(rarity: string | undefined): string {
+    if (!rarity) return 'Common';
     return rarity.charAt(0).toUpperCase() + rarity.slice(1);
   }
 

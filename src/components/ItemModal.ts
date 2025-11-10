@@ -68,7 +68,7 @@ export class ItemModal {
           <div class="item-modal__header-info">
             <h2 class="item-modal__name">${itemName}</h2>
             <div class="item-modal__badges">
-              <span class="rarity-badge rarity-badge--${item.rarity}">${item.rarity}</span>
+              ${item.rarity ? `<span class="rarity-badge rarity-badge--${item.rarity}">${item.rarity}</span>` : ''}
               <span class="decision-badge decision-badge--${decisionData.decision}">
                 ${this.getDecisionLabel(decisionData.decision)}
               </span>

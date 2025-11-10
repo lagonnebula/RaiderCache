@@ -36,7 +36,7 @@ export interface Item {
   name: Record<string, string>; // language code -> name
   description?: Record<string, string>;
   type: string;
-  rarity: Rarity;
+  rarity?: Rarity;  // Optional - not all items have rarity in API data
   value: number; // Coin value
   weightKg: number;
   stackSize: number;

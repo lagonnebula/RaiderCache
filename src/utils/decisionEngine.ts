@@ -104,7 +104,7 @@ export class DecisionEngine {
     }
 
     // Priority 7: Rare/Epic/Legendary items (SITUATIONAL - player decision)
-    if (['rare', 'epic', 'legendary'].includes(item.rarity)) {
+    if (item.rarity && ['rare', 'epic', 'legendary'].includes(item.rarity)) {
       return {
         decision: 'situational',
         confidence: 60,
@@ -271,7 +271,7 @@ export class DecisionEngine {
     details: string;
   } {
     const recipeCount = item.recipe?.length || 0;
-    const isRare = ['rare', 'epic', 'legendary'].includes(item.rarity);
+    const isRare = item.rarity ? ['rare', 'epic', 'legendary'].includes(item.rarity) : false;
 
     return {
       isValuable: recipeCount > 2 || (recipeCount > 0 && isRare),
