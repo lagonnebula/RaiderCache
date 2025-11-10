@@ -44,11 +44,14 @@ export class ZoneFilter {
       currentZones.push(zone);
     }
 
+    // Update internal state before notifying parent
+    this.config.selectedZones = currentZones;
     this.config.onZoneSelect(currentZones);
     this.render();
   }
 
   private handleClearAll(): void {
+    this.config.selectedZones = [];
     this.config.onZoneSelect([]);
     this.render();
   }
