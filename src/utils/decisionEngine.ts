@@ -3,6 +3,7 @@ import type { UserProgress } from '../types/UserProgress';
 import type { HideoutModule } from '../types/HideoutModule';
 import type { Quest } from '../types/Quest';
 import type { Project } from '../types/Project';
+import { WeaponGrouper } from './weaponGrouping';
 
 export class DecisionEngine {
   private items: Map<string, Item>;
@@ -26,6 +27,47 @@ export class DecisionEngine {
    * Main decision logic - determines if player should keep, recycle, or sell an item
    */
   getDecision(item: Item, userProgress: UserProgress): DecisionReason {
+    // Priority 0: Lower tier weapons - ALWAYS RECYCLE
+    if (WeaponGrouper.isWeaponVariant(item)) {
+      const tierNumber = WeaponGrouper.getTierNumber(item.id);
+
+      // Recycle tier I and II weapons
+      if (tierNumber <= 2) {
+        return {
+          decision: 'recycle',
+          confidence: 95,
+          reasons: [
+            `Tier ${tierNumber} weapon - upgrade to higher tiers`,
+            'Lower tier weapons become obsolete'
+          ]
+        };
+      }
+
+      // Tier III is situational
+      if (tierNumber === 3) {
+        return {
+          decision: 'situational',
+          confidence: 70,
+          reasons: [
+            'Mid-tier weapon',
+            'Keep if you lack better weapons, otherwise recycle'
+          ]
+        };
+      }
+
+      // Tier IV+ are worth keeping until you get better
+      if (tierNumber >= 4) {
+        return {
+          decision: 'keep',
+          confidence: 85,
+          reasons: [
+            `High-tier weapon (Tier ${tierNumber})`,
+            'Solid endgame weapon'
+          ]
+        };
+      }
+    }
+
     // Priority 1: Quest items (ALWAYS KEEP)
     const questUse = this.isUsedInActiveQuests(item, userProgress);
     if (questUse.isUsed) {

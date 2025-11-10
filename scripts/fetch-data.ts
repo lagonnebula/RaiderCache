@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
-import * as sharp from 'sharp';
+import sharp from 'sharp';
 
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/RaidTheory/arcraiders-data/main';
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
@@ -52,27 +52,112 @@ function downloadFile(url: string, dest: string): Promise<void> {
   });
 }
 
-async function resizeImage(filePath: string): Promise<void> {
-  const image = sharp(filePath);
-  const metadata = await image.metadata();
+async function resizeImage(filePath: string): Promise<boolean> {
+  const tmpPath = filePath + '.tmp';
 
-  if (!metadata.width || !metadata.height) {
-    throw new Error('Unable to read image dimensions');
+  try {
+    // Read the original image
+    let image = sharp(filePath);
+    const metadata = await image.metadata();
+
+    if (!metadata.width || !metadata.height) {
+      console.warn(`  ⚠️  Cannot read dimensions for ${path.basename(filePath)}`);
+      return false;
+    }
+
+    // Skip if already small (under 100px on either dimension)
+    if (metadata.width < 100 || metadata.height < 100) {
+      return true; // Already small enough
+    }
+
+    const newWidth = Math.round(metadata.width / 4);
+    const newHeight = Math.round(metadata.height / 4);
+
+    // Normalize and resize with multiple fallback strategies
+    try {
+      // Strategy 1: High-quality resize with format normalization
+      await sharp(filePath)
+        .resize(newWidth, newHeight, {
+          fit: 'fill',
+          kernel: 'lanczos3'
+        })
+        .png({
+          compressionLevel: 9,
+          adaptiveFiltering: true,
+          palette: false // Use full color
+        })
+        .toColorspace('srgb') // Normalize colorspace
+        .withMetadata({ // Strip most metadata but keep orientation
+          orientation: metadata.orientation
+        })
+        .toFile(tmpPath);
+    } catch (resizeError) {
+      // Strategy 2: Simpler settings if advanced fails
+      try {
+        await sharp(filePath)
+          .resize(newWidth, newHeight, {
+            fit: 'inside'
+          })
+          .png()
+          .toColorspace('srgb')
+          .toFile(tmpPath);
+      } catch (fallbackError) {
+        // Strategy 3: Most basic conversion - just normalize format
+        try {
+          await sharp(filePath)
+            .png()
+            .toColorspace('srgb')
+            .toFile(tmpPath);
+          console.warn(`  ⚠️  Could not resize ${path.basename(filePath)}, normalized format only`);
+        } catch (finalError) {
+          console.warn(`  ⚠️  All strategies failed for ${path.basename(filePath)}`);
+          return false;
+        }
+      }
+    }
+
+    // Verify the resized image is valid
+    const resizedStats = fs.statSync(tmpPath);
+    if (resizedStats.size === 0) {
+      fs.unlinkSync(tmpPath);
+      console.warn(`  ⚠️  Resized image is empty: ${path.basename(filePath)}`);
+      return false;
+    }
+
+    // Verify we can read the resized image
+    try {
+      const verifyMetadata = await sharp(tmpPath).metadata();
+      if (!verifyMetadata.width || !verifyMetadata.height) {
+        fs.unlinkSync(tmpPath);
+        console.warn(`  ⚠️  Resized image is invalid: ${path.basename(filePath)}`);
+        return false;
+      }
+
+      // Verify it's PNG format
+      if (verifyMetadata.format !== 'png') {
+        fs.unlinkSync(tmpPath);
+        console.warn(`  ⚠️  Image not converted to PNG: ${path.basename(filePath)}`);
+        return false;
+      }
+    } catch (verifyError) {
+      fs.unlinkSync(tmpPath);
+      console.warn(`  ⚠️  Resized image verification failed: ${path.basename(filePath)}`);
+      return false;
+    }
+
+    // Replace original with resized version
+    fs.unlinkSync(filePath);
+    fs.renameSync(tmpPath, filePath);
+    return true;
+
+  } catch (error) {
+    // Clean up tmp file if it exists
+    if (fs.existsSync(tmpPath)) {
+      fs.unlinkSync(tmpPath);
+    }
+    console.warn(`  ⚠️  Resize error for ${path.basename(filePath)}: ${error}`);
+    return false;
   }
-
-  const newWidth = Math.round(metadata.width / 4);
-  const newHeight = Math.round(metadata.height / 4);
-
-  await image
-    .resize(newWidth, newHeight, {
-      fit: 'fill',
-      kernel: 'lanczos3'
-    })
-    .toFile(filePath + '.tmp');
-
-  // Replace original with resized version
-  fs.unlinkSync(filePath);
-  fs.renameSync(filePath + '.tmp', filePath);
 }
 
 function loadResizedIcons(): Set<string> {
@@ -168,6 +253,7 @@ async function main() {
     let downloadedIcons = 0;
     let skippedIcons = 0;
     let resizedCount = 0;
+    let resizeFailedCount = 0;
 
     for (const item of itemsData) {
       if (item.imageFilename) {
@@ -195,10 +281,14 @@ async function main() {
           }
 
           // Resize if not already resized
-          if (!resizedIcons.has(filename)) {
-            await resizeImage(iconPath);
-            resizedIcons.add(filename);
-            resizedCount++;
+          if (!resizedIcons.has(filename) && fs.existsSync(iconPath)) {
+            const resizeSuccess = await resizeImage(iconPath);
+            if (resizeSuccess) {
+              resizedIcons.add(filename);
+              resizedCount++;
+            } else {
+              resizeFailedCount++;
+            }
           }
 
           // Log progress every 10 icons
@@ -217,6 +307,9 @@ async function main() {
     console.log(`✅ Downloaded ${downloadedIcons} new icons (${skippedIcons} already existed)`);
     if (resizedCount > 0) {
       console.log(`📐 Resized ${resizedCount} icons to 25% of original size`);
+    }
+    if (resizeFailedCount > 0) {
+      console.log(`⚠️  ${resizeFailedCount} icons failed to resize (kept original)`);
     }
   } catch (error) {
     console.error('❌ Failed to download icons:', error);

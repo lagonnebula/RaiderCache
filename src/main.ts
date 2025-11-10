@@ -3,6 +3,7 @@ import { dataLoader, type GameData } from './utils/dataLoader';
 import { DecisionEngine } from './utils/decisionEngine';
 import { SearchEngine, type SearchableItem } from './utils/searchEngine';
 import { StorageManager } from './utils/storage';
+import { WeaponGrouper } from './utils/weaponGrouping';
 import type { UserProgress } from './types/UserProgress';
 import type { Item, RecycleDecision } from './types/Item';
 import { ItemCard } from './components/ItemCard';
@@ -22,7 +23,8 @@ class App {
     searchQuery: '',
     decisions: new Set<RecycleDecision>(),
     rarities: new Set<string>(),
-    category: ''
+    category: '',
+    groupWeapons: true
   };
 
   constructor() {
@@ -173,6 +175,15 @@ class App {
       this.filters.category = (e.target as HTMLSelectElement).value;
       this.applyFilters();
     });
+
+    // Weapon grouping checkbox
+    const groupWeaponsCheckbox = document.getElementById('group-weapons') as HTMLInputElement;
+    if (groupWeaponsCheckbox) {
+      groupWeaponsCheckbox.addEventListener('change', (e) => {
+        this.filters.groupWeapons = (e.target as HTMLInputElement).checked;
+        this.applyFilters();
+      });
+    }
   }
 
   private initializeDashboard() {
@@ -284,6 +295,11 @@ class App {
     // Category filter
     if (this.filters.category) {
       items = items.filter(item => item.type === this.filters.category);
+    }
+
+    // Weapon grouping - show only highest tier of each weapon
+    if (this.filters.groupWeapons) {
+      items = WeaponGrouper.filterToHighestTiers(items);
     }
 
     this.filteredItems = items;
