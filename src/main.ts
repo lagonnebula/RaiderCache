@@ -24,7 +24,8 @@ class App {
     decisions: new Set<RecycleDecision>(),
     rarities: new Set<string>(),
     category: '',
-    groupWeapons: true
+    groupWeapons: true,
+    sortBy: 'name' as 'name' | 'value' | 'rarity' | 'weight' | 'decision'
   };
 
   constructor() {
@@ -92,6 +93,7 @@ class App {
     this.initializeDecisionFilters();
     this.initializeRarityFilters();
     this.initializeCategoryFilter();
+    this.initializeSortSelector();
 
     // Initialize dashboard
     this.initializeDashboard();
@@ -191,6 +193,16 @@ class App {
     }
   }
 
+  private initializeSortSelector() {
+    const select = document.getElementById('sort-selector') as HTMLSelectElement;
+    if (!select) return;
+
+    select.addEventListener('change', (e) => {
+      this.filters.sortBy = (e.target as HTMLSelectElement).value as any;
+      this.applyFilters();
+    });
+  }
+
   private initializeDashboard() {
     const dashboardCards = document.querySelectorAll('.dashboard-card');
 
@@ -231,13 +243,13 @@ class App {
     const workshopGrid = document.getElementById('workshop-grid');
     if (!workshopGrid) return;
 
-    // Filter out utility_bench and stash as they're not relevant for this tool
+    // Filter out utility_bench, stash, and workbench as they're not relevant for this tool
     const relevantModules = this.gameData.hideoutModules.filter(
-      module => module.id !== 'utility_bench' && module.id !== 'stash'
+      module => module.id !== 'utility_bench' && module.id !== 'stash' && module.id !== 'workbench'
     );
 
     relevantModules.forEach(module => {
-      const currentLevel = this.userProgress.hideoutLevels[module.id] || 1;
+      const currentLevel = this.userProgress.hideoutLevels[module.id] ?? 0;
       const moduleName = module.name['en'] || module.name[Object.keys(module.name)[0]];
 
       const card = document.createElement('div');
@@ -245,10 +257,10 @@ class App {
       card.innerHTML = `
         <h3>${moduleName}</h3>
         <div class="workshop-card__level">
-          <span>Level ${currentLevel} / ${module.maxLevel}</span>
+          <span class="workshop-card__level-text">Level ${currentLevel} / ${module.maxLevel}</span>
           <input
             type="range"
-            min="1"
+            min="0"
             max="${module.maxLevel}"
             value="${currentLevel}"
             data-module-id="${module.id}"
@@ -258,6 +270,13 @@ class App {
       `;
 
       const slider = card.querySelector('.workshop-card__slider') as HTMLInputElement;
+      const levelText = card.querySelector('.workshop-card__level-text') as HTMLSpanElement;
+
+      slider.addEventListener('input', (e) => {
+        const newLevel = parseInt((e.target as HTMLInputElement).value);
+        levelText.textContent = `Level ${newLevel} / ${module.maxLevel}`;
+      });
+
       slider.addEventListener('change', (e) => {
         const newLevel = parseInt((e.target as HTMLInputElement).value);
         this.updateWorkshopLevel(module.id, newLevel);
