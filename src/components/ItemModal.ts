@@ -16,6 +16,8 @@ export interface ItemModalConfig {
 export class ItemModal {
   private config: ItemModalConfig;
   private modalElement: HTMLElement | null = null;
+  private static currentMapViewModal: HTMLElement | null = null;
+  private static currentMapView: MapView | null = null;
 
   constructor(config: ItemModalConfig) {
     this.config = config;
@@ -202,9 +204,9 @@ export class ItemModal {
                   <h4>Zone Types:</h4>
                   <div class="zone-badges">
                     ${item.foundIn.map(location => {
-                      const zoneInfo = getZoneInfo(location);
-                      return `<span class="zone-badge" style="--zone-color: ${zoneInfo?.color || '#6b7280'}" title="${zoneInfo?.description || location}">${location}</span>`;
-                    }).join('')}
+      const zoneInfo = getZoneInfo(location);
+      return `<span class="zone-badge" style="--zone-color: ${zoneInfo?.color || '#6b7280'}" title="${zoneInfo?.description || location}">${location}</span>`;
+    }).join('')}
                   </div>
                   <p class="zone-hint">Search for loot containers in these zone types</p>
                 </div>
@@ -272,8 +274,8 @@ export class ItemModal {
         <div class="map-recommendations">
           <h4>Where to Find:</h4>
           <div class="all-maps-info">
-            <span class="map-badge map-badge--all">Available on All Raid Maps</span>
-            <p class="map-hint">${hasEnemyInfo ? 'Hunt ARC enemies on any raid map to farm this item' : 'Can be looted from enemies across all raid maps'}</p>
+            <span class="map-badge map-badge--all">Available on All Maps</span>
+            <p class="map-hint">${hasEnemyInfo ? 'Hunt ARC enemies on any raid map to farm this item' : 'Can be looted from enemies across all maps'}</p>
           </div>
         </div>
       `;
@@ -313,6 +315,16 @@ export class ItemModal {
   private async openMapView(): Promise<void> {
     const { item } = this.config;
 
+    // Close any existing map view modal first
+    if (ItemModal.currentMapViewModal && ItemModal.currentMapView) {
+      ItemModal.currentMapView.hide();
+      if (ItemModal.currentMapViewModal.parentNode) {
+        document.body.removeChild(ItemModal.currentMapViewModal);
+      }
+      ItemModal.currentMapViewModal = null;
+      ItemModal.currentMapView = null;
+    }
+
     // Create map view modal container
     const mapViewModal = document.createElement('div');
     mapViewModal.id = 'map-view-modal';
@@ -332,8 +344,14 @@ export class ItemModal {
       onClose: () => {
         mapView.hide();
         document.body.removeChild(mapViewModal);
+        ItemModal.currentMapViewModal = null;
+        ItemModal.currentMapView = null;
       }
     });
+
+    // Store current map view modal and instance
+    ItemModal.currentMapViewModal = mapViewModal;
+    ItemModal.currentMapView = mapView;
 
     try {
       await mapView.init();
@@ -344,6 +362,8 @@ export class ItemModal {
     } catch (error) {
       console.error('Failed to load map view:', error);
       document.body.removeChild(mapViewModal);
+      ItemModal.currentMapViewModal = null;
+      ItemModal.currentMapView = null;
     }
   }
 
@@ -586,7 +606,7 @@ export class ItemModal {
       item: targetItem,
       decisionData: targetItem.decisionData,
       decisionEngine: this.config.decisionEngine,
-      onClose: () => {}
+      onClose: () => { }
     });
 
     newModal.show();

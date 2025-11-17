@@ -15,6 +15,8 @@ export interface MapViewConfig {
 }
 
 export class MapView {
+  private static instanceCounter: number = 0;
+  private instanceId: string;
   private config: MapViewConfig;
   private activeMap: string = 'dam';
   private mapData: MapData[] = [];
@@ -27,6 +29,7 @@ export class MapView {
 
   constructor(config: MapViewConfig) {
     this.config = config;
+    this.instanceId = `mapview-${MapView.instanceCounter++}`;
   }
 
   async init(): Promise<void> {
@@ -68,7 +71,7 @@ export class MapView {
             <button class="modal-close" data-action="close">×</button>
           </div>
           <div class="map-view__empty-state">
-            <p>This item is not available on raid maps.</p>
+            <p>This item is not available on all maps.</p>
             ${item.foundIn?.includes('Exodus') ? '<p>Purchase from the Exodus vendor in your Hideout.</p>' : ''}
           </div>
         </div>
@@ -148,7 +151,7 @@ export class MapView {
   private renderMapCanvas(mapData: { mapName: string; markers: MapMarker[]; isActive: boolean }): string {
     return `
       <div class="map-canvas ${mapData.isActive ? 'active' : ''}" data-map="${mapData.mapName}">
-        <div id="map-${mapData.mapName}" class="leaflet-map-container"></div>
+        <div id="map-${this.instanceId}-${mapData.mapName}" class="leaflet-map-container"></div>
       </div>
     `;
   }
@@ -259,7 +262,7 @@ export class MapView {
   }
 
   private initializeLeafletMap(mapData: { mapName: string; markers: MapMarker[]; isActive: boolean }): void {
-    const containerId = `map-${mapData.mapName}`;
+    const containerId = `map-${this.instanceId}-${mapData.mapName}`;
     const mapContainer = document.getElementById(containerId);
 
     if (!mapContainer || this.leafletMaps.has(mapData.mapName)) return;
@@ -271,7 +274,9 @@ export class MapView {
     }
 
     const config = this.getMapConfig(mapData.mapName);
-    const maxZoom = 4;
+    const maxNativeZoom = 4;  // Actual tile layers available (0-4)
+    const maxZoom = 5;  // Allow one extra zoom level via tile upscaling
+    const minZoom = 1;  // Prevent excessive zoom out
     const tileSize = config.tileSize;
     const worldExtent = config.worldExtent;
 
@@ -284,7 +289,7 @@ export class MapView {
     // Create map with custom CRS
     const map = L.map(containerId, {
       crs: customCRS,
-      minZoom: 0,
+      minZoom: minZoom,
       maxZoom: maxZoom,
       zoomControl: true,
       attributionControl: false
@@ -305,12 +310,12 @@ export class MapView {
     // Don't restrict tile bounds - let tiles render where they exist
     // The CRS transformation handles the coordinate mapping
     const tileLayer = L.tileLayer(tileUrl, {
-      minZoom: 0,
+      minZoom: minZoom,
       maxZoom: maxZoom,
-      maxNativeZoom: maxZoom,
+      maxNativeZoom: maxNativeZoom,
       tileSize: tileSize,
       noWrap: true,
-      errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=='
+      errorTileUrl: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVQIW2NgAAIAAAoAAggA9GkAAAAASUVORK5CYII='
     });
 
     tileLayer.on('tileerror', (e: any) => {
