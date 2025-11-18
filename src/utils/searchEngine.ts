@@ -10,13 +10,14 @@ export interface SearchableItem extends Item {
  * Determines if an item is a cosmetic (outfit, emote, charm, color)
  */
 export function isCosmetic(item: Item): boolean {
-  const name = item.name?.toLowerCase() || '';
+  const id = item.id.toLowerCase() || '';
   return (
-    name.includes('(outfit)') ||
-    name.includes('(emote)') ||
-    name.includes('(backpack charm)') ||
-    name.includes('(color)') ||
-    name.includes('(colour)')
+    id.includes('outfit') ||
+    id.includes('emote') ||
+    id.includes('backpack-charm') ||
+    id.includes('color') ||
+    id.includes('colour') ||
+    id.includes('variant')
   );
 }
 
@@ -26,14 +27,15 @@ export class SearchEngine {
   constructor(items: SearchableItem[]) {
     this.fuse = new Fuse(items, {
       keys: [
-        { name: 'name', weight: 2 }, // Now just 'name' (English only)
-        { name: 'description', weight: 1 }, // Now just 'description' (English only)
+        { name: 'name', weight: 2, getFn: (item) => Object.keys(item.name).reduce((prev, curr) => `${prev} | ${item.name[curr]}`, "")},
+        { name: 'description', weight: 1, getFn: (item) => Object.keys(item.description ?? {}).reduce((prev, curr) => `${prev} | ${item.description![curr] ?? ""}`, "")},
         { name: 'type', weight: 1.5 },
         { name: 'id', weight: 0.5 }
       ],
-      threshold: 0.3,
+      threshold: 0.2,
+      ignoreDiacritics: true,
       includeScore: true,
-      useExtendedSearch: true
+      useExtendedSearch: true,
     });
   }
 
@@ -44,7 +46,6 @@ export class SearchEngine {
     if (!query.trim()) {
       return [];
     }
-
     const results = this.fuse.search(query);
     return results.map(result => result.item);
   }

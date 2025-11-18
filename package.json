@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "fetch-data": "tsx scripts/fetch-data.ts",
     "validate-data": "tsx scripts/validate-data.ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "i18n:init": "git clone https://github.com/RaidTheory/arcraiders-data.git",
+    "i18n:pull": "cd arcraiders-data && git pull && cd ../"
   },
   "dependencies": {
     "fuse.js": "^7.0.0",

@@ -2,6 +2,7 @@ import type { Item } from '../types/Item';
 import type { HideoutModule } from '../types/HideoutModule';
 import type { Quest } from '../types/Quest';
 import type { Project } from '../types/Project';
+import { TranslationData } from './translationEngine';
 
 export interface GameData {
   items: Item[];
@@ -57,6 +58,18 @@ export class DataLoader {
   }
 
   /**
+   * Load translations
+   */
+  async loadTranslations(): Promise<TranslationData | null> {
+    try {
+      return await this.fetchJSON<TranslationData>(this.getPath('data/translations.json'));
+    } catch (error) {
+      console.warn('Translations not found, using default values:', error);
+      return null;
+    }
+  }
+
+  /**
    * Load all game data
    */
   async loadGameData(): Promise<GameData> {
@@ -67,9 +80,9 @@ export class DataLoader {
     try {
       const [items, hideoutModules, quests, projects, metadata, priceOverrides] = await Promise.all([
         this.fetchJSON<Item[]>(this.getPath('data/items.json')),
-        this.fetchJSON<HideoutModule[]>(this.getPath('data/static/hideoutModules.json')),
+        this.fetchJSON<HideoutModule[]>(this.getPath('data/hideoutModules.json')),
         this.fetchJSON<Quest[]>(this.getPath('data/quests.json')),
-        this.fetchJSON<Project[]>(this.getPath('data/static/projects.json')),
+        this.fetchJSON<Project[]>(this.getPath('data/projects.json')),
         this.fetchJSON<any>(this.getPath('data/metadata.json')),
         this.loadPriceOverrides()
       ]);

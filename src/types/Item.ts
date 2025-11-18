@@ -23,8 +23,8 @@ export interface ItemEffect {
 
 export interface Item {
   id: string;
-  name: string; // English only (previously multilingual)
-  description?: string; // English only (previously multilingual)
+  name: Record<string, string>; // English only (previously multilingual)
+  description?: Record<string, string>; // English only (previously multilingual)
   type: string;
   rarity?: Rarity;  // Optional - not all items have rarity in API data
   value: number; // Coin value
@@ -49,7 +49,8 @@ export interface ItemWithDecision extends Item {
   decisionReasons: string[];
 }
 
-export type RecycleDecision = 'keep' | 'sell_or_recycle' | 'situational';
+export const RECYCLE_DECISIONS = ['keep', 'sell_or_recycle', 'situational'] as const;
+export type RecycleDecision = typeof RECYCLE_DECISIONS[number];
 
 export interface DecisionReason {
   decision: RecycleDecision;

@@ -8,6 +8,7 @@ import {
   getItemLocationDescription,
   formatSubcategoryName
 } from '../utils/itemMarkerMapper';
+import { DEFAULT_LANGUAGE, translationEngine } from '../utils/translationEngine';
 
 export interface MapViewConfig {
   item: Item;
@@ -61,13 +62,14 @@ export class MapView {
   render(container: HTMLElement): void {
     this.container = container;
     const { item } = this.config;
+    const itemName = item.name[translationEngine.getCurrentLanguage()] || item.name[DEFAULT_LANGUAGE] || item.id;
     const relevantMaps = getRelevantMaps(item);
 
     if (relevantMaps.length === 0) {
       container.innerHTML = `
         <div class="map-view map-view--empty">
           <div class="map-view__header">
-            <h2>${item.name} - Locations</h2>
+            <h2>${itemName} - Locations</h2>
             <button class="modal-close" data-action="close">×</button>
           </div>
           <div class="map-view__empty-state">
@@ -100,7 +102,7 @@ export class MapView {
       <div class="map-view">
         <div class="map-view__header">
           <div class="map-view__title">
-            <h2>${item.name}</h2>
+            <h2>${itemName}</h2>
             <span class="map-view__marker-count">${totalMarkers} location${totalMarkers !== 1 ? 's' : ''}</span>
           </div>
           <button class="modal-close" data-action="close">×</button>

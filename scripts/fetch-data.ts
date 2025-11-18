@@ -10,6 +10,8 @@ const SUPABASE_URL = 'https://unhbvkszwhczbjxgetgk.supabase.co/rest/v1';
 // If they rotate this key, we'll need to extract the new one from https://metaforge.app
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuaGJ2a3N6d2hjemJqeGdldGdrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NjgwMjUsImV4cCI6MjA2MDU0NDAyNX0.gckCmxnlpwwJOGmc5ebLYDnaWaxr5PW31eCrSPR5aRQ';
 
+const ARCRAIDERS_DATA_DIR = path.join(process.cwd(), 'arcraiders-data');
+
 const PUBLIC_DIR = path.join(process.cwd(), 'public');
 const DATA_DIR = path.join(PUBLIC_DIR, 'data');
 const STATIC_DATA_DIR = path.join(DATA_DIR, 'static');
@@ -747,12 +749,58 @@ async function calculateMapExtents(): Promise<void> {
   console.log(`\n✅ Map extents saved to ${configPath}`);
 }
 
+function isArcRaiderDataFileExist(filename: string): boolean {
+  const isExist = fs.existsSync(filename);
+  return isExist;
+}
+
+const CUSTOM_OVERRIDE: Record<string, string> = {
+  "spring" : "steel_spring"
+};
+//Extends translations from https://github.com/RaidTheory/arcraiders-data repository
+function getItemsTranslation(metaforge: MetaForgeItem | MetaForgeQuest, type: string): any {
+  const arcraidersDataId = CUSTOM_OVERRIDE[metaforge.id] ?? metaforge.id.replace(/-/g, "_").replace("recipe", "blueprint");
+  const filename = path.join(ARCRAIDERS_DATA_DIR, type, arcraidersDataId + '.json');
+  const filenameTest = path.join(ARCRAIDERS_DATA_DIR, type, arcraidersDataId.replace("_blueprint", "") + '.json');
+
+  if(!isArcRaiderDataFileExist(filename) && !isArcRaiderDataFileExist(filenameTest)){
+    fs.writeFileSync(path.join("./scripts/tmp", 'missing_translation.csv'), `${metaforge.id};${type};${metaforge.name};no_file\n`, { flag: 'a' });
+    return {
+      name : { en : metaforge.name },
+      description : { en : metaforge.description || '' },
+      ...(metaforge.objectives ? { objectives : metaforge.objectives } : {})
+    };
+  }
+
+  const finalFilename = isArcRaiderDataFileExist(filename) ? filename : filenameTest;
+
+  const data = fs.readFileSync(finalFilename);
+  const json = JSON.parse(data.toString());
+
+  if(!json && !json.name && !json.description){
+    fs.writeFileSync(path.join("./scripts/tmp", 'missing_translation.csv'), `${metaforge.id};${type};${metaforge.name};invalid_file\n`, { flag: 'a' });
+    return {
+      name : { en : metaforge.name },
+      description : { en : metaforge.description || '' },
+      ...(metaforge.objectives ? { objectives : metaforge.objectives } : {})
+    };
+  }
+
+  return {
+    name: json.name,
+    description: json.description,
+    ...(metaforge.objectives ? { objectives : json.objectives } : {})
+  }
+}
+
 function mapMetaForgeItemToOurFormat(
   metaforgeItem: MetaForgeItem,
   craftingMap: Map<string, Record<string, number>>,
   recycleMap: Map<string, Record<string, number>>
 ): any {
   // Map MetaForge item structure to our Item interface
+  const translations = getItemsTranslation(metaforgeItem, 'items') ?? {};
+
   return {
     id: metaforgeItem.id,
     name: metaforgeItem.name, // Now just a string (English only)
@@ -771,10 +819,12 @@ function mapMetaForgeItemToOurFormat(
     // Crafting and recycling data from Supabase
     recipe: craftingMap.get(metaforgeItem.id) || undefined,
     recyclesInto: recycleMap.get(metaforgeItem.id) || undefined,
+    ...translations,
   };
 }
 
 function mapMetaForgeQuestToOurFormat(metaforgeQuest: MetaForgeQuest): any {
+  const translations = getItemsTranslation(metaforgeQuest, 'quests') ?? {};
   return {
     id: metaforgeQuest.id,
     name: metaforgeQuest.name,
@@ -783,6 +833,7 @@ function mapMetaForgeQuestToOurFormat(metaforgeQuest: MetaForgeQuest): any {
     rewards: metaforgeQuest.rewards || {},
     trader: metaforgeQuest.trader,
     xp: metaforgeQuest.xp || 0,
+    ...translations,
   };
 }
 

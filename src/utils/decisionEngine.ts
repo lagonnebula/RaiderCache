@@ -5,6 +5,7 @@ import type { Quest } from '../types/Quest';
 import type { Project } from '../types/Project';
 import { WeaponGrouper } from './weaponGrouping';
 import { buildReverseRecipeIndex } from './recipeUtils';
+import { DEFAULT_LANGUAGE, translationEngine } from './translationEngine';
 
 export class DecisionEngine {
   private items: Map<string, Item>;
@@ -49,10 +50,7 @@ export class DecisionEngine {
     if (item.id === 'assorted_seeds') {
       return this.finalizeDecision(item, {
         decision: 'keep',
-        reasons: [
-          'Valuable currency item',
-          'Used for trading with Celeste'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.seeds')
       });
     }
 
@@ -60,10 +58,7 @@ export class DecisionEngine {
     if (item.rarity?.toLowerCase() === 'legendary') {
       return this.finalizeDecision(item, {
         decision: 'keep',
-        reasons: [
-          'Legendary rarity - extremely valuable',
-          'Keep all legendaries'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.legendary')
       });
     }
 
@@ -71,10 +66,7 @@ export class DecisionEngine {
     if (item.type === 'Blueprint') {
       return this.finalizeDecision(item, {
         decision: 'situational',
-        reasons: [
-          'Blueprint - valuable for unlocking crafting recipes',
-          'Review carefully before selling or recycling'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.blueprint')
       });
     }
 
@@ -82,10 +74,7 @@ export class DecisionEngine {
     if (item.type === 'Weapon' || WeaponGrouper.isWeaponVariant(item)) {
       return this.finalizeDecision(item, {
         decision: 'situational',
-        reasons: [
-          'Weapon - review based on your current loadout',
-          'Consider tier and your play style'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.weapon')
       });
     }
 
@@ -93,10 +82,7 @@ export class DecisionEngine {
     if (item.type === 'Ammunition') {
       return this.finalizeDecision(item, {
         decision: 'situational',
-        reasons: [
-          'Ammunition - essential for weapons',
-          'Review based on your weapon loadout'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.ammo')
       });
     }
 
@@ -104,10 +90,7 @@ export class DecisionEngine {
     if (item.type === 'Quick Use') {
       return this.finalizeDecision(item, {
         decision: 'situational',
-        reasons: [
-          'Consumable item - grenades, healing items, etc.',
-          'Review based on your current inventory needs'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.quick-use')
       });
     }
 
@@ -115,10 +98,7 @@ export class DecisionEngine {
     if (item.type === 'Key') {
       return this.finalizeDecision(item, {
         decision: 'situational',
-        reasons: [
-          'Key - opens locked areas and containers',
-          'Review based on areas you want to access'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.key')
       });
     }
 
@@ -127,7 +107,7 @@ export class DecisionEngine {
     if (questUse.isUsed) {
       return this.finalizeDecision(item, {
         decision: 'keep',
-        reasons: [`Required for quest: ${questUse.questNames.join(', ')}`],
+        reasons: translationEngine.get<Array<string>>('decision.reason.quest_item', [questUse.questNames.join(', ')]),
         dependencies: questUse.questNames
       });
     }
@@ -137,7 +117,7 @@ export class DecisionEngine {
     if (projectUse.isUsed) {
       return this.finalizeDecision(item, {
         decision: 'keep',
-        reasons: [`Needed for project: ${projectUse.projectNames.join(', ')}`],
+        reasons: translationEngine.get<Array<string>>('decision.reason.project_item', [projectUse.projectNames.join(', ')]),
         dependencies: projectUse.projectNames
       });
     }
@@ -147,9 +127,7 @@ export class DecisionEngine {
     if (upgradeUse.isNeeded) {
       return this.finalizeDecision(item, {
         decision: 'keep',
-        reasons: [
-          `Required for hideout upgrade: ${upgradeUse.moduleNames.join(', ')}`
-        ],
+        reasons: translationEngine.get<Array<string>>('decision.reason.upgrade_material', [upgradeUse.moduleNames.join(', ')]),
         dependencies: upgradeUse.moduleNames
       });
     }
@@ -157,12 +135,11 @@ export class DecisionEngine {
     // Priority 10: Crafting materials (SITUATIONAL based on rarity and use)
     const craftingValue = this.evaluateCraftingValue(item);
     if (craftingValue.isValuable) {
+      const craftingQuality = craftingValue.isRare ? 'rare' : 'common';
+      const details = translationEngine.get(`decision.crating_material.rarity`, [craftingQuality.substring(0, 1).toUpperCase() + craftingQuality.substring(1)]);
       return this.finalizeDecision(item, {
         decision: 'situational',
-        reasons: [
-          `Used in ${craftingValue.recipeCount} crafting recipes`,
-          craftingValue.details
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.crafting_material', [craftingValue.recipeCount.toString(), details]),
       });
     }
 
@@ -170,10 +147,7 @@ export class DecisionEngine {
     if (this.isHighValueTrinket(item)) {
       return this.finalizeDecision(item, {
         decision: 'sell_or_recycle',
-        reasons: [
-          `High value (${item.value} coins)`,
-          'No crafting or upgrade use'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.high_value_trinket', [item.value.toString()]),
       });
     }
 
@@ -184,10 +158,7 @@ export class DecisionEngine {
       if (recycleValue.isValuable) {
         return this.finalizeDecision(item, {
           decision: 'sell_or_recycle',
-          reasons: [
-            `Recycles into: ${recycleValue.description}`,
-            `Recycle value: Components (${recycleValue.estimatedValue} coins) worth less than Item (${item.value} coins)`
-          ]
+          reasons: translationEngine.get<Array<string>>('decision.reason.item_recycle', [recycleValue.description, recycleValue.estimatedValue.toString(), item.value.toString()]),
         });
       }
     }
@@ -196,17 +167,14 @@ export class DecisionEngine {
     if (item.rarity && ['rare', 'epic'].includes(item.rarity.toLowerCase())) {
       return this.finalizeDecision(item, {
         decision: 'situational',
-        reasons: [
-          `${item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1)} rarity`,
-          'May have future use - review carefully'
-        ]
+        reasons: translationEngine.get<Array<string>>('decision.reason.item_rarity', [item.rarity]),
       });
     }
 
     // Default: Safe to sell or recycle
     return this.finalizeDecision(item, {
       decision: 'sell_or_recycle',
-      reasons: ['No immediate use found', 'Safe to sell or recycle']
+      reasons: translationEngine.get<Array<string>>('decision.reason.other'),
     });
   }
 
@@ -242,7 +210,7 @@ export class DecisionEngine {
       }
 
       if (isRequired) {
-        questNames.push(quest.name);
+        questNames.push(quest.name[translationEngine.getCurrentLanguage()] || quest.name[DEFAULT_LANGUAGE]);
       }
     }
 
@@ -272,7 +240,7 @@ export class DecisionEngine {
       // Check legacy requirements format
       if (project.requirements && project.requirements.length > 0) {
         isRequired = project.requirements.some(
-          req => req.item_id === item.id
+          req => req.itemId === item.id
         );
       }
 
@@ -280,7 +248,7 @@ export class DecisionEngine {
       if (!isRequired && project.phases && project.phases.length > 0) {
         for (const phase of project.phases) {
           if (phase.requirementItemIds && phase.requirementItemIds.length > 0) {
-            if (phase.requirementItemIds.some(req => req.item_id === item.id)) {
+            if (phase.requirementItemIds.some(req => req.itemId === item.id)) {
               isRequired = true;
               break;
             }
@@ -289,7 +257,7 @@ export class DecisionEngine {
       }
 
       if (isRequired) {
-        projectNames.push(project.name);
+        projectNames.push(project.name[translationEngine.getCurrentLanguage()] || project.name[DEFAULT_LANGUAGE]);
       }
     }
 
@@ -333,11 +301,11 @@ export class DecisionEngine {
         }
 
         const isRequired = levelData.requirementItemIds.some(
-          req => req.item_id === item.id
+          req => req.itemId === item.id
         );
 
         if (isRequired) {
-          moduleNames.push(`${module.name} (Level ${levelData.level})`);
+          moduleNames.push(`${module.name[translationEngine.getCurrentLanguage()] || module.name[DEFAULT_LANGUAGE]} (Level ${levelData.level})`);
         }
       }
     }
@@ -354,7 +322,7 @@ export class DecisionEngine {
   private evaluateCraftingValue(item: Item): {
     isValuable: boolean;
     recipeCount: number;
-    details: string;
+    isRare: boolean;
   } {
     // Check how many items use THIS item as an ingredient
     const recipeCount = this.reverseRecipeIndex.get(item.id)?.length || 0;
@@ -363,9 +331,7 @@ export class DecisionEngine {
     return {
       isValuable: recipeCount > 2 || (recipeCount > 0 && isRare),
       recipeCount,
-      details: isRare
-        ? 'Rare crafting material'
-        : 'Common crafting ingredient'
+      isRare,
     };
   }
 
@@ -426,7 +392,7 @@ export class DecisionEngine {
    * Get item name
    */
   private getItemName(item: Item): string {
-    return item.name;
+    return item.name[translationEngine.getCurrentLanguage()] || item.name[DEFAULT_LANGUAGE];
   }
 
   /**

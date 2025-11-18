@@ -25,24 +25,29 @@
               <input
                 type="search"
                 id="search"
-                placeholder="Search items..."
+                data-i18n-placeholder="search.placeholder"
                 class="search-input-header"
                 autocomplete="off"
               />
             </div>
             <div class="header-sort">
               <select id="sort-selector" class="sort-select">
-                <option value="name">Name</option>
-                <option value="value">Value</option>
-                <option value="rarity">Rarity</option>
-                <option value="weight">Weight</option>
-                <option value="decision">Decision</option>
+                <option value="name" data-i18n="sort.name">Name</option>
+                <option value="value" data-i18n="sort.value">Value</option>
+                <option value="rarity" data-i18n="sort.rarity">Rarity</option>
+                <option value="weight" data-i18n="sort.weight">Weight</option>
+                <option value="decision" data-i18n="sort.decision">Decision</option>
               </select>
               <button id="sort-direction-btn" class="sort-direction-btn" title="Sort ascending">↑</button>
             </div>
             <div class="view-toggle">
-              <button class="toggle-btn active" data-view="grid">Grid</button>
-              <button class="toggle-btn" data-view="list">List</button>
+              <button class="toggle-btn active" data-view="grid" data-i18n="view.grid">Grid</button>
+              <button class="toggle-btn" data-view="list" data-i18n="view.list">List</button>
+            </div>
+
+            <div class="header-lang">
+              <select id="lang-selector" class="lang-select">
+              </select>
             </div>
           </div>
         </div>
@@ -57,23 +62,23 @@
             <!-- Filters -->
             <div class="controls collapsible collapsed">
               <h3 class="collapsible-header" data-target="search-content">
-                <span>Filters</span>
+                <span data-i18n="controls.filters">Filters</span>
                 <span class="collapse-icon">▼</span>
               </h3>
               <div class="collapsible-content" id="search-content">
                 <div class="filters" id="filters">
                   <div class="filter-group">
-                    <label class="filter-label">Decision:</label>
+                    <label class="filter-label" data-i18n="controls.decision">Decision:</label>
                     <div class="filter-buttons" id="decision-filter"></div>
                   </div>
 
                   <div class="filter-group">
-                    <label class="filter-label">Rarity:</label>
+                    <label class="filter-label" data-i18n="controls.rarity">Rarity:</label>
                     <div class="filter-buttons" id="rarity-filter"></div>
                   </div>
 
                   <div class="filter-group">
-                    <label class="filter-label">Category:</label>
+                    <label class="filter-label" data-i18n="controls.category">Category:</label>
                     <select id="category-filter" class="filter-select">
                       <option value="">All Categories</option>
                     </select>
@@ -82,7 +87,7 @@
                   <div class="filter-group">
                     <label class="filter-label checkbox-label">
                       <input type="checkbox" id="cosmetics-toggle" class="filter-checkbox">
-                      <span>Show Cosmetics</span>
+                      <span data-i18n="controls.cosmetics">Show Cosmetics</span>
                     </label>
                   </div>
                 </div>
@@ -92,7 +97,7 @@
             <!-- Workshop Progress -->
             <div class="controls collapsible">
               <h3 class="collapsible-header" data-target="workshop-content">
-                <span>Hideout Progress</span>
+                <span data-i18n="controls.workshop">Hideout Progress</span>
                 <span class="collapse-icon">▼</span>
               </h3>
               <div class="collapsible-content" id="workshop-content">
@@ -103,7 +108,7 @@
             <!-- Location Filter -->
             <div class="controls collapsible">
               <h3 class="collapsible-header" data-target="zone-filter-content">
-                <span>Location</span>
+                <span data-i18n="controls.zone-filter">Location</span>
                 <span class="collapse-icon">▼</span>
               </h3>
               <div class="collapsible-content" id="zone-filter-content">
@@ -125,8 +130,8 @@
 
     <footer class="footer">
       <div class="container">
-        <p>Data auto-updates daily from community sources • Not affiliated with Embark Studios</p>
-        <p class="update-info">Last updated: <span id="last-update">Loading...</span></p>
+        <p data-i18n="footer.data-auto-update">Data auto-updates daily from community sources • Not affiliated with Embark Studios</p>
+        <p class="update-info"><span data-i18n="footer.last-update">Last updated:</span> <span id="last-update">Loading...</span></p>
       </div>
     </footer>
   </div>

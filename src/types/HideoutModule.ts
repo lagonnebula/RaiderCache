@@ -1,5 +1,5 @@
 export interface WorkshopRequirement {
-  item_id: string;
+  itemId: string;
   quantity: number;
 }
 
@@ -17,7 +17,7 @@ export interface WorkshopLevel {
 
 export interface HideoutModule {
   id: string;
-  name: string; // English only (previously multilingual)
+  name: Record<string, string>; // English only (previously multilingual)
   maxLevel: number;
   levels: WorkshopLevel[];
 }

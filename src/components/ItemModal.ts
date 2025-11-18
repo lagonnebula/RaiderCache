@@ -5,6 +5,7 @@ import type { DecisionEngine } from '../utils/decisionEngine';
 import { WeaponGrouper } from '../utils/weaponGrouping';
 import { getEnemyDropInfo, isEnemyDrop } from '../utils/enemyDrops';
 import { MapView } from './MapView';
+import { DEFAULT_LANGUAGE, translationEngine } from '../utils/translationEngine';
 
 export interface ItemModalConfig {
   item: Item;
@@ -18,9 +19,11 @@ export class ItemModal {
   private modalElement: HTMLElement | null = null;
   private static currentMapViewModal: HTMLElement | null = null;
   private static currentMapView: MapView | null = null;
+  private language: string;
 
   constructor(config: ItemModalConfig) {
     this.config = config;
+    this.language = translationEngine.getCurrentLanguage();
   }
 
   async show(): Promise<void> {
@@ -119,10 +122,10 @@ export class ItemModal {
   }
 
   private renderContent(includeUsedToCraft: boolean = true): string {
-    const { item, decisionData } = this.config;
+    const {item, decisionData } = this.config;
     const iconUrl = dataLoader.getIconUrl(item);
-    const itemName = item.name || '[Unknown Item]';
-    const description = item.description || 'No description available.';
+    const itemName = typeof item.name === 'object' ? item.name[this.language] ?? item.name['en'] : item.name || '[Unknown Item]';
+    const description = typeof item.description === 'object' ? item.description[this.language] ?? item.description['en'] : item.description || 'No description available.';
     const itemValue = item.value ?? 0;
     const itemWeight = item.weightKg ?? 0;
     const itemStack = item.stackSize ?? 1;
@@ -143,7 +146,10 @@ export class ItemModal {
           <div class="item-modal__header-info">
             <h2 class="item-modal__name">${itemName}</h2>
             <div class="item-modal__badges">
-              ${item.rarity ? `<span class="rarity-badge rarity-badge--${item.rarity}">${item.rarity}</span>` : '<span class="rarity-badge rarity-badge--unknown">Unknown</span>'}
+              ${item.rarity
+                ? `<span class="rarity-badge rarity-badge--${item.rarity}">${translationEngine.get(`rarity.${item.rarity}`)}</span>` 
+                : '<span class="rarity-badge rarity-badge--unknown">Unknown</span>'
+              }
               <span class="decision-badge decision-badge--${decisionData.decision}">
                 ${this.getDecisionLabel(decisionData.decision)}
               </span>
@@ -154,12 +160,12 @@ export class ItemModal {
 
         <div class="item-modal__body">
           <div class="item-modal__section">
-            <h3>Description</h3>
+            <h3>${translationEngine.get('item-modal.description.title')}</h3>
             <p>${description}</p>
           </div>
 
           <div class="item-modal__section">
-            <h3>Decision Analysis</h3>
+            <h3>${translationEngine.get('item-modal.decision-analysis.title')}</h3>
             <div class="decision-analysis">
               <div class="decision-analysis__header">
                 <span class="decision-analysis__decision decision-${decisionData.decision}">
@@ -167,25 +173,20 @@ export class ItemModal {
                 </span>
               </div>
               ${this.renderDecisionReasons(decisionData)}
-              ${decisionData.dependencies && decisionData.dependencies.length > 0 ? `
-                <div class="decision-analysis__dependencies">
-                  <strong>Required for:</strong> ${decisionData.dependencies.join(', ')}
-                </div>
-              ` : ''}
             </div>
           </div>
 
           <div class="item-modal__grid">
             <div class="item-modal__section">
-              <h3>Properties</h3>
+              <h3>${translationEngine.get('item-modal.properties.title')}</h3>
               <dl class="property-list">
-                <dt>Type</dt>
+                <dt>${translationEngine.get('item-modal.properties.type')}</dt>
                 <dd>${item.type || 'Unknown'}</dd>
-                <dt>Value</dt>
+                <dt>${translationEngine.get('item-modal.properties.value')}</dt>
                 <dd>${itemValue} coins</dd>
-                <dt>Weight</dt>
+                <dt>${translationEngine.get('item-modal.properties.weight')}</dt>
                 <dd>${itemWeight} kg</dd>
-                <dt>Stack Size</dt>
+                <dt>${translationEngine.get('item-modal.properties.stack-size')}</dt>
                 <dd>${itemStack}</dd>
               </dl>
             </div>
@@ -198,15 +199,15 @@ export class ItemModal {
 
             ${Array.isArray(item.foundIn) && item.foundIn.length > 0 ? `
               <div class="item-modal__section">
-                <h3>Location & Maps</h3>
+                <h3>${translationEngine.get('item-modal.location-maps.title')}</h3>
 
                 <div class="location-zones">
-                  <h4>Zone Types:</h4>
+                  <h4>${translationEngine.get('item-modal.location-maps.zone-types')}</h4>
                   <div class="zone-badges">
                     ${item.foundIn.map(location => {
-      const zoneInfo = getZoneInfo(location);
-      return `<span class="zone-badge" style="--zone-color: ${zoneInfo?.color || '#6b7280'}" title="${zoneInfo?.description || location}">${location}</span>`;
-    }).join('')}
+                      const zoneInfo = getZoneInfo(location);
+                      return `<span class="zone-badge" style="--zone-color: ${zoneInfo?.color || '#6b7280'}" title="${zoneInfo?.description || location}">${location}</span>`;
+                    }).join('')}
                   </div>
                   <p class="zone-hint">Search for loot containers in these zone types</p>
                 </div>
@@ -220,7 +221,7 @@ export class ItemModal {
 
           ${item.tip ? `
             <div class="item-modal__section item-modal__tip">
-              <h3>💡 Tip</h3>
+              <h3>${translationEngine.get('item-modal.tip.title')}</h3>
               <p>${item.tip}</p>
             </div>
           ` : ''}
@@ -289,23 +290,24 @@ export class ItemModal {
     let zoneDescription = '';
     if (zoneCategories.has('building')) {
       const buildingZones = zoneDetails.filter(z => z!.category === 'building').map(z => z!.displayName);
-      zoneDescription = `Look inside <strong>${buildingZones.join(', ')}</strong> buildings`;
+      zoneDescription = translationEngine.get(`item-modal.location.zone_building`, [buildingZones.join(', ')]);
     } else if (zoneCategories.has('environment')) {
       const envZones = zoneDetails.filter(z => z!.category === 'environment').map(z => z!.displayName);
-      zoneDescription = `Search <strong>${envZones.join(', ')}</strong> areas`;
+      zoneDescription = translationEngine.get(`item-modal.location.zone_environment`, [envZones.join(', ')]);
     } else {
-      zoneDescription = `Search <strong>${zones.join(', ')}</strong> zones`;
+      zoneDescription = translationEngine.get(`item-modal.location.zone_environment`, [zones.join(', ')]);
     }
 
     return `
       <div class="map-recommendations">
         <h4>Map Locations:</h4>
         <button class="btn btn--map" data-action="view-map">
-          View Interactive Map
+          ${translationEngine.get(`item-modal.location.view_map_button`)}
         </button>
         <div class="location-help">
           <p class="map-hint">
-            ${zoneDescription} - click "View Interactive Map" for precise locations
+            ${zoneDescription} <br/>
+            ${translationEngine.get(`item-modal.location.tips`, [translationEngine.get(`item-modal.location.view_map_button`)])}
           </p>
         </div>
       </div>
@@ -368,17 +370,11 @@ export class ItemModal {
   }
 
   private getDecisionLabel(decision: string): string {
-    const labels: Record<string, string> = {
-      keep: 'KEEP',
-      sell_or_recycle: 'SAFE TO SELL',
-      situational: 'REVIEW'
-    };
-    return labels[decision] || decision.toUpperCase();
+    return translationEngine.get(`decision.${decision}`).toUpperCase();
   }
 
   private renderDecisionReasons(decisionData: DecisionReason): string {
     let reasons = decisionData.reasons;
-
     // If dependencies exist, filter out dependency-related reasons to avoid duplication
     if (decisionData.dependencies && decisionData.dependencies.length > 0) {
       const dependencyPrefixes = [
@@ -420,8 +416,8 @@ export class ItemModal {
       .map(([itemId, quantity]) => {
         const outputItem = this.findItemByIdSimple(itemId);
         const iconUrl = outputItem ? dataLoader.getIconUrl(outputItem) : '';
-        const itemName = outputItem?.name || itemId;
-        const rarity = (outputItem?.rarity || 'common').toLowerCase();
+        const itemName = typeof outputItem?.name === 'object' ? outputItem.name[this.language] ?? outputItem.name[DEFAULT_LANGUAGE] : outputItem?.name || itemId;
+        const rarity = translationEngine.get(`rarity.${(outputItem?.rarity || 'common').toLowerCase()}`);
 
         return `
           <div class="recipe-item" data-item-id="${itemId}" title="${itemName}">
@@ -436,7 +432,7 @@ export class ItemModal {
 
     return `
       <div class="item-modal__section">
-        <h3>Recycles Into</h3>
+        <h3>${translationEngine.get(`item-modal.recycle.title`)}</h3>
         <div class="recipe-grid">
           ${recycleItems}
         </div>
@@ -458,7 +454,7 @@ export class ItemModal {
         .map(([ingredientId, quantity]) => {
           const ingredientItem = this.findItemByIdSimple(ingredientId);
           const iconUrl = ingredientItem ? dataLoader.getIconUrl(ingredientItem) : '';
-          const itemName = ingredientItem?.name || ingredientId;
+          const itemName = typeof ingredientItem?.name === 'object' ? ingredientItem.name[this.language] ?? ingredientItem.name['en'] : ingredientItem?.name || ingredientId;
           const rarity = (ingredientItem?.rarity || 'common').toLowerCase();
 
           return `
@@ -489,7 +485,7 @@ export class ItemModal {
         .map(([ingredientId, quantity]) => {
           const ingredientItem = this.findItemByIdSimple(ingredientId);
           const iconUrl = ingredientItem ? dataLoader.getIconUrl(ingredientItem) : '';
-          const itemName = ingredientItem?.name || ingredientId;
+          const itemName = typeof ingredientItem?.name === 'object' ? ingredientItem.name[this.language] ?? ingredientItem.name['en'] : ingredientItem?.name || ingredientId;
           const rarity = (ingredientItem?.rarity || 'common').toLowerCase();
 
           return `
@@ -505,12 +501,12 @@ export class ItemModal {
 
       return `
         <div class="item-modal__section">
-          <h3>Crafting Recipe</h3>
-          <p class="recipe-description">Ingredients needed to craft this item:</p>
+          <h3>${translationEngine.get(`item-modal.craft_recipe.title`)}</h3>
+          <p class="recipe-description">${translationEngine.get(`item-modal.craft_recipe.description`)}</p>
           <div class="recipe-grid">
             ${recipeItems}
           </div>
-          ${item.craftBench ? `<p class="craft-bench">Requires: ${item.craftBench}</p>` : ''}
+          ${item.craftBench ? `<p class="craft-bench">${translationEngine.get(`item-modal.craft_recipe.bench`)} ${item.craftBench}</p>` : ''}
         </div>
       `;
     }
@@ -519,8 +515,8 @@ export class ItemModal {
     if (isWeapon) {
       return `
         <div class="item-modal__section">
-          <h3>Crafting Recipe</h3>
-          <p class="recipe-description recipe-description--missing">Crafting recipe data missing for this weapon.</p>
+          <h3>${translationEngine.get(`item-modal.craft_recipe.title`)}</h3>
+          <p class="recipe-description recipe-description--missing">${translationEngine.get(`item-modal.craft_recipe.missing_crafting_recipe`)}</p>
         </div>
       `;
     }
@@ -543,15 +539,15 @@ export class ItemModal {
 
     const itemsList = usedInItems
       .map(craftableItem => {
-        const name = craftableItem.name || craftableItem.id;
+        const itemName = typeof craftableItem?.name === 'object' ? craftableItem.name[this.language] ?? craftableItem.name['en'] : craftableItem?.name || craftableItem;
         const quantity = craftableItem.recipe?.[item.id] || 0;
         const iconUrl = dataLoader.getIconUrl(craftableItem);
         const rarity = (craftableItem.rarity || 'common').toLowerCase();
 
         return `
-          <div class="recipe-item" data-item-id="${craftableItem.id}" title="${name}">
+          <div class="recipe-item" data-item-id="${craftableItem.id}" title="${itemName}">
             <div class="recipe-item__icon recipe-item__icon--${rarity}">
-              <img src="${iconUrl}" alt="${name}" onerror="this.outerHTML='<div class=\\'recipe-item__placeholder\\'>?</div>'" />
+              <img src="${iconUrl}" alt="${itemName}" onerror="this.outerHTML='<div class=\\'recipe-item__placeholder\\'>?</div>'" />
               <span class="recipe-item__quantity">${quantity}</span>
             </div>
           </div>
@@ -561,8 +557,10 @@ export class ItemModal {
 
     return `
       <div class="item-modal__section">
-        <h3>Used to Craft</h3>
-        <p class="recipe-description">This item is used as an ingredient in ${usedInItems.length} recipe${usedInItems.length > 1 ? 's' : ''}:</p>
+        <h3>${translationEngine.get(`item-modal.used_to_craft.title`)}</h3>
+        <p class="recipe-description">
+        ${translationEngine.get(`item-modal.used_to_craft.description`, [usedInItems.length.toString(), usedInItems.length > 1 ? 's' : ''])}
+        </p>
         <div class="recipe-grid">
           ${itemsList}
         </div>

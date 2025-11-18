@@ -39,6 +39,7 @@ lerna-debug.log*
 
 # Temporary files
 *.tmp
+tmp/
 *.temp
 
 # Icon resize tracking
@@ -49,3 +50,4 @@ claude.md
 docs/
 metaforge-js/
 research/
+arcraiders-data/

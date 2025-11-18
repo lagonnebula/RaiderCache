@@ -2,9 +2,10 @@ import './styles/main.css';
 import { dataLoader, type GameData } from './utils/dataLoader';
 import { DecisionEngine } from './utils/decisionEngine';
 import { SearchEngine, type SearchableItem, isCosmetic } from './utils/searchEngine';
+import { DEFAULT_LANGUAGE, initializeTranslationEngine, SUPPORTED_LANGUAGES, SupportedLanguage, translationEngine } from './utils/translationEngine';
 import { StorageManager } from './utils/storage';
 import type { UserProgress } from './types/UserProgress';
-import type { Item, RecycleDecision } from './types/Item';
+import { RECYCLE_DECISIONS, type Item, type RecycleDecision } from './types/Item';
 import { ItemCard } from './components/ItemCard';
 import { ItemModal } from './components/ItemModal';
 import { ZoneFilter } from './components/ZoneFilter';
@@ -40,6 +41,13 @@ class App {
     try {
       // Show loading state
       this.showLoading();
+
+      // Initialize translation engine
+      await initializeTranslationEngine();
+
+      // Inject i18n system
+      const { initializeI18n } = await import('./utils/i18n');
+      initializeI18n();
 
       // Load game data
       this.gameData = await dataLoader.loadGameData();
@@ -116,6 +124,9 @@ class App {
     // View toggle
     this.initializeViewToggle();
 
+    // Lang toggle
+    this.initializeLanguageToggle();
+
     // Initialize workshop tracker
     this.initializeWorkshopTracker();
 
@@ -127,18 +138,11 @@ class App {
     const filterContainer = document.getElementById('decision-filter');
     if (!filterContainer) return;
 
-    const decisions: RecycleDecision[] = ['keep', 'sell_or_recycle', 'situational'];
-    const labels: Record<RecycleDecision, string> = {
-      keep: 'Keep',
-      sell_or_recycle: 'Safe to Sell',
-      situational: 'Your Call'
-    };
-
-    decisions.forEach(decision => {
+    RECYCLE_DECISIONS.forEach(decision => {
       const button = document.createElement('button');
       button.className = 'filter-btn';
       button.dataset.decision = decision;
-      button.textContent = labels[decision];
+      button.textContent = translationEngine.get(`decision.${decision}`);
 
       button.addEventListener('click', () => {
         if (this.filters.decisions.has(decision)) {
@@ -165,7 +169,7 @@ class App {
       const button = document.createElement('button');
       button.className = `filter-btn rarity-${rarity}`;
       button.dataset.rarity = rarity;
-      button.textContent = rarity.charAt(0).toUpperCase() + rarity.slice(1);
+      button.textContent = translationEngine.get(`rarity.${rarity}`);
 
       button.addEventListener('click', () => {
         if (this.filters.rarities.has(rarity)) {
@@ -231,6 +235,9 @@ class App {
       });
       this.updateSortDirectionButton();
     }
+    //apply initial sort
+    //todo : Maybe save sort and filter in local storage too
+    this.applyFilters();
   }
 
   private updateSortDirectionButton() {
@@ -256,6 +263,29 @@ class App {
           (filterBtn as HTMLElement).click();
         }
       });
+    });
+  }
+
+  private initializeLanguageToggle() {
+    const optionsLang = document.getElementById('lang-selector') as HTMLSelectElement;
+    if(!optionsLang) return;
+
+    const currentLanguage = translationEngine.getCurrentLanguage();
+
+    SUPPORTED_LANGUAGES.forEach((lang) => {
+      const option = document.createElement('option');
+      option.value = lang;
+      option.textContent = lang.toUpperCase();
+      option.selected = lang === currentLanguage;
+      optionsLang.appendChild(option);
+    });
+
+    optionsLang.addEventListener('change', (e) => {
+      const selectedValue = (e.target as HTMLSelectElement).value as SupportedLanguage;
+      translationEngine.setLanguage(selectedValue);
+      //on language change, reapply sort; should probably do it only on "name" sort
+      this.applyFilters();
+      this.render();
     });
   }
 
@@ -302,10 +332,10 @@ class App {
 
     relevantModules.forEach(module => {
       const currentLevel = this.userProgress.hideoutLevels[module.id] ?? 0;
-      const moduleName = module.name;
+      const moduleName = module.name[translationEngine.getCurrentLanguage()] || module.name[DEFAULT_LANGUAGE];
 
       const getLevelText = (level: number) => {
-        return level === 0 ? 'Not Unlocked' : `Level ${level} / ${module.maxLevel}`;
+        return level === 0 ? translationEngine.get('controls.workshop.not_unlock') : translationEngine.get('controls.workshop.levels', [level.toString(), module.maxLevel.toString()]);
       };
 
       const card = document.createElement('div');
@@ -436,8 +466,8 @@ class App {
 
       switch (this.filters.sortBy) {
         case 'name':
-          const nameA = a.name || '';
-          const nameB = b.name || '';
+          const nameA = typeof a.name === "object" ? a.name[translationEngine.getCurrentLanguage()] ?? a.name[DEFAULT_LANGUAGE] : a.name || '';
+          const nameB = typeof b.name === "object" ? b.name[translationEngine.getCurrentLanguage()] ?? b.name[DEFAULT_LANGUAGE] : b.name || '';
           result = nameA.localeCompare(nameB);
           break;
 
@@ -473,10 +503,12 @@ class App {
     this.itemsGrid.innerHTML = '';
 
     if (this.filteredItems.length === 0) {
-      this.itemsGrid.innerHTML = '<div class="no-results">No items found matching your filters.</div>';
+      this.itemsGrid.classList.add('no-results');
+      this.itemsGrid.innerHTML = `<div>${translationEngine.get('items.no_results')}</div>`;
       return;
     }
 
+    this.itemsGrid.classList.remove('no-results');
     this.filteredItems.forEach(item => {
       const itemCard = new ItemCard({
         item,

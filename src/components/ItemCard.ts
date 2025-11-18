@@ -1,6 +1,7 @@
 import type { Item, DecisionReason, RecycleDecision } from '../types/Item';
 import { dataLoader } from '../utils/dataLoader';
 import { StorageManager } from '../utils/storage';
+import { translationEngine } from '../utils/translationEngine';
 
 export interface ItemCardConfig {
   item: Item;
@@ -20,6 +21,7 @@ export class ItemCard {
 
   render(): HTMLElement {
     const { item, decisionData } = this.config;
+    const lang = translationEngine.getCurrentLanguage();
 
     const card = document.createElement('div');
     const rarityClass = item.rarity ? `rarity-${item.rarity.toLowerCase()}` : 'rarity-common';
@@ -27,7 +29,7 @@ export class ItemCard {
     card.dataset.itemId = item.id;
 
     const iconUrl = dataLoader.getIconUrl(item);
-    const itemName = item.name || '[Unknown Item]';
+    const itemName = typeof item.name === 'object' ? item.name[lang] ?? item.name['en'] : item.name || '[Unknown Item]';
     const itemValue = item.value ?? 0;
     const stackSize = item.stackSize ?? 1;
 
@@ -98,8 +100,8 @@ export class ItemCard {
   }
 
   private getRarityLabel(rarity: string | undefined): string {
-    if (!rarity) return 'Common';
-    return rarity.charAt(0).toUpperCase() + rarity.slice(1);
+    const rarityId = rarity ?? 'common';
+    return translationEngine.get(`rarity.${rarityId}`);
   }
 
   private getDecisionIcon(decision: RecycleDecision): string {
@@ -112,12 +114,8 @@ export class ItemCard {
   }
 
   private getDecisionLabel(decision: RecycleDecision): string {
-    const labels: Record<RecycleDecision, string> = {
-      keep: 'KEEP',
-      sell_or_recycle: 'SAFE TO SELL',
-      situational: 'YOUR CALL'
-    };
-    return labels[decision] || 'UNKNOWN';
+    const decisionValue = translationEngine.get(`decision.${decision}`);
+    return decisionValue.toUpperCase();
   }
 
   destroy(): void {

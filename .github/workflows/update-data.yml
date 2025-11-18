@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Clone ArcRaiders Data
+        run: npm run i18n:init
+        
       - name: Fetch latest game data
         run: npm run fetch-data
 
