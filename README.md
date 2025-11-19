@@ -16,6 +16,9 @@ Visit the live app: [https://otdavies.github.io/RaiderCache/](https://otdavies.g
 # Install dependencies
 npm install
 
+# Install arcraider data
+npm run i18n:init
+
 # Fetch game data
 npm run fetch-data
 
@@ -33,7 +36,7 @@ npm run preview
 
 This tool uses data from multiple sources:
 - **[MetaForge API](https://metaforge.app/arc-raiders)** - Primary live data source for items, quests, and icons
-- **Local Static Files** - Hideout modules and projects (updated manually as needed)
+- **Arc Raiders Data** - Hideout modules, projects, and items translations
 - Item data and icons are auto-updated daily via GitHub Actions
 
 ## 🛠️ Tech Stack
@@ -98,7 +101,10 @@ All Arc Raiders game content © Embark Studios AB.
   - Comprehensive item and quest data with frequent updates
   - High-quality WebP icons (converted to PNG for compatibility)
   - Active community-maintained API
-- **Static Data**: Hideout modules and projects maintained locally
+- **Arc Raiders Data**: [Arc Raiders Data](https://github.com/RaidTheory/arcraiders-data)
+  - Hideout modules
+  - Projects
+  - Translations
 
 ### Additional Resources
 - **Game Content**: All Arc Raiders game content © [Embark Studios AB](https://www.embark-studios.com/)
