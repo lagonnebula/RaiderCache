@@ -64,7 +64,7 @@ class App {
       this.allItems = this.decisionEngine.getItemsWithDecisions(this.userProgress);
 
       // Initialize search engine
-      this.searchEngine = new SearchEngine(this.allItems);
+      this.searchEngine = new SearchEngine(this.allItems, translationEngine.getCurrentLanguage());
 
       // Set filtered items to all items initially
       this.filteredItems = [...this.allItems];
@@ -282,7 +282,10 @@ class App {
 
     optionsLang.addEventListener('change', (e) => {
       const selectedValue = (e.target as HTMLSelectElement).value as SupportedLanguage;
-      translationEngine.setLanguage(selectedValue);
+      if(selectedValue !== translationEngine.getCurrentLanguage()) {
+        translationEngine.setLanguage(selectedValue);
+        this.searchEngine.setLanguage(selectedValue);
+      }
       //on language change, reapply sort; should probably do it only on "name" sort
       this.applyFilters();
       this.render();
