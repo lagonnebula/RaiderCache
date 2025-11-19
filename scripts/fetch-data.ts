@@ -2,6 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as https from 'https';
 import sharp from 'sharp';
+import { HideoutModule, WorkshopLevel, WorkshopRequirement } from '../src/types/HideoutModule';
+import { Project, ProjectPhase, ProjectRequirement } from '../src/types/Project';
 
 const METAFORGE_API_BASE = 'https://metaforge.app/api/arc-raiders';
 const SUPABASE_URL = 'https://unhbvkszwhczbjxgetgk.supabase.co/rest/v1';
@@ -26,6 +28,21 @@ const RESIZED_MARKER = path.join(ICONS_DIR, '.resized');
     fs.mkdirSync(dir, { recursive: true });
   }
 });
+
+//Custom ID override
+const METAFORGE_TO_ARD: Record<string, string> = {
+  "spring" : "steel_spring"
+};
+
+const ARD_TO_METAFORGE = Object.fromEntries(Object.entries(METAFORGE_TO_ARD).map(([key, value]) => [value, key]));
+
+const convertArcRaiderDataIdIntoMetaforgeId = (arcraiderdataId: string): string => {
+  return ARD_TO_METAFORGE[arcraiderdataId] ?? arcraiderdataId.replace(/_/g, "-").replace("blueprint", "recipe");
+}
+
+const convertMetaforgeIdIntoArcRaiderDataId = (metaforgeId: string): string => {
+  return METAFORGE_TO_ARD[metaforgeId] ?? metaforgeId.replace(/-/g, "_").replace("recipe", "blueprint");
+}
 
 interface MetaForgeItem {
   id: string;
@@ -399,6 +416,62 @@ async function fetchAllRecycleComponents(): Promise<Map<string, Record<string, n
   }
 }
 
+async function fetchAllHideoutModules(): Promise<HideoutModule[]> {
+  console.log('📥 Fetching hideout modules from arcraider data...');
+  try {
+    const files = fs.readdirSync(path.join(ARCRAIDERS_DATA_DIR, 'hideout'));
+    const modules: HideoutModule[] = files.map((file) => {
+      const fileData = fs.readFileSync(path.join(ARCRAIDERS_DATA_DIR, 'hideout', file), 'utf-8');
+      const hideoutData: HideoutModule = JSON.parse(fileData);
+      hideoutData.levels = hideoutData.levels.map((level) => {
+        return {
+          ...level,
+          requirementItemIds: level.requirementItemIds.map((requirementItem) => {
+            return {
+              ...requirementItem,
+              itemId: convertArcRaiderDataIdIntoMetaforgeId(requirementItem.itemId)
+            }
+          })
+        }
+      })
+      return hideoutData;
+    });
+    console.log(`✅ Loaded hideout modules for ${modules.length} items`);
+    return modules;
+  } catch (error) {
+    console.warn(`⚠️  Failed to fetch hideout modules: ${error}`);
+    return [];
+  }
+}
+
+async function fetchAllProjects(): Promise<Project[]> {
+  console.log('📥 Fetching projects from arcraider data...');
+  try {
+    const projectDatas: Project[] = JSON.parse(fs.readFileSync(path.join(ARCRAIDERS_DATA_DIR, 'projects.json'), 'utf-8'));
+    const projects: Project[] = projectDatas.map((project) => {
+      project.phases = (project.phases ?? []).map((phase) => {
+        return {
+          ...phase,
+          requirementItemIds: (phase.requirementItemIds ?? []).map((requirementItem: ProjectRequirement) => {
+            return {
+              ...requirementItem,
+              itemId: convertArcRaiderDataIdIntoMetaforgeId(requirementItem.itemId)
+            }
+          })
+        }
+      })
+      return project;
+    });
+    console.log(`✅ Loaded projects for ${projects.length} items`);
+    return projects;
+  } catch (error) {
+    console.warn(`⚠️  Failed to fetch projects: ${error}`);
+    return [];
+  }
+}
+
+
+
 async function fetchAllMapData(): Promise<MapData[]> {
   console.log('📥 Fetching map marker data from MetaForge Supabase...');
 
@@ -754,12 +827,9 @@ function isArcRaiderDataFileExist(filename: string): boolean {
   return isExist;
 }
 
-const CUSTOM_OVERRIDE: Record<string, string> = {
-  "spring" : "steel_spring"
-};
 //Extends translations from https://github.com/RaidTheory/arcraiders-data repository
 function getItemsTranslation(metaforge: MetaForgeItem | MetaForgeQuest, type: string): any {
-  const arcraidersDataId = CUSTOM_OVERRIDE[metaforge.id] ?? metaforge.id.replace(/-/g, "_").replace("recipe", "blueprint");
+  const arcraidersDataId = convertMetaforgeIdIntoArcRaiderDataId(metaforge.id);
   const filename = path.join(ARCRAIDERS_DATA_DIR, type, arcraidersDataId + '.json');
   const filenameTest = path.join(ARCRAIDERS_DATA_DIR, type, arcraidersDataId.replace("_blueprint", "") + '.json');
 
@@ -863,6 +933,22 @@ async function main() {
     JSON.stringify(mappedItems, null, 2)
   );
   console.log(`✅ Saved ${mappedItems.length} items to items.json`);
+
+  const hideoutModules = await fetchAllHideoutModules();
+  console.log('\n💾 Saving hideoutModules.json...');
+  fs.writeFileSync(
+    path.join(DATA_DIR, 'hideoutModules.json'),
+    JSON.stringify(hideoutModules, null, 2)
+  );
+  console.log(`✅ Saved ${hideoutModules.length} hideoutModules to hideoutModules.json`);
+
+  const projects = await fetchAllProjects();
+  console.log('\n💾 Saving projects.json...');
+  fs.writeFileSync(
+    path.join(DATA_DIR, 'projects.json'),
+    JSON.stringify(projects, null, 2)
+  );
+  console.log(`✅ Saved ${projects.length} projects to projects.json`);
 
   // Fetch quests from MetaForge
   const metaforgeQuests = await fetchAllQuests();
@@ -972,6 +1058,8 @@ async function main() {
     staticSource: 'Local static files (hideout modules & projects)',
     version: '2.1.0',
     itemCount: mappedItems.length,
+    hideoutModuleCount: hideoutModules.length,
+    projectCount: projects.length,
     questCount: mappedQuests.length,
     mapCount: mapData.length,
     mapMarkerCount: totalMapMarkers,
@@ -990,10 +1078,11 @@ async function main() {
   console.log('\n✨ Data fetch complete!');
   console.log(`📊 Last updated: ${metadata.lastUpdated}`);
   console.log(`📦 Total items: ${metadata.itemCount}`);
+  console.log(`📦 Total hideout modules: ${metadata.hideoutModuleCount}`);
+  console.log(`📦 Total projects: ${metadata.projectCount}`);
   console.log(`🎯 Total quests: ${metadata.questCount}`);
   console.log(`🗺️  Total maps: ${metadata.mapCount}`);
   console.log(`📍 Total map markers: ${metadata.mapMarkerCount}`);
-  console.log(`\n⚠️  Note: Hideout modules and projects are stored in public/data/static/ and are not updated by this script.`);
 }
 
 main().catch(console.error);

@@ -275,7 +275,7 @@ export class DecisionEngine {
     userProgress: UserProgress
   ): { isNeeded: boolean; moduleNames: string[] } {
     const moduleNames: string[] = [];
-
+    
     for (const module of this.hideoutModules) {
       const currentLevel = userProgress.hideoutLevels[module.id] || 1;
 
@@ -299,7 +299,7 @@ export class DecisionEngine {
         if (!levelData.requirementItemIds || levelData.requirementItemIds.length === 0) {
           continue;
         }
-
+       
         const isRequired = levelData.requirementItemIds.some(
           req => req.itemId === item.id
         );
