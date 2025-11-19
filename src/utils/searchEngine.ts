@@ -14,7 +14,8 @@ export function isCosmetic(item: Item): boolean {
   return (
     id.includes('outfit') ||
     id.includes('emote') ||
-    id.includes('backpack-charm') ||
+    id.includes('backpack-charm') || 
+    id.includes('backpack-attachment') ||
     id.includes('color') ||
     id.includes('colour') ||
     id.includes('variant')
