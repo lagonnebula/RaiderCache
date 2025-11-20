@@ -1,4 +1,4 @@
-import type { Item, DecisionReason } from '../types/Item';
+import type { Item, DecisionReason, RecycleDecision } from '../types/Item';
 import { dataLoader } from '../utils/dataLoader';
 import { getMapRecommendations, getZoneInfo } from '../utils/zoneMapping';
 import type { DecisionEngine } from '../utils/decisionEngine';
@@ -119,6 +119,15 @@ export class ItemModal {
       // Fallback for browsers without requestIdleCallback
       Promise.resolve().then(callback);
     }
+  }
+
+  private getDecisionIcon(decision: RecycleDecision): string {
+    const icons: Record<RecycleDecision, string> = {
+      keep: '🛡️',
+      sell_or_recycle: '💰',
+      situational: '❓'
+    };
+    return icons[decision] || '❓';
   }
 
   private renderContent(includeUsedToCraft: boolean = true): string {
@@ -456,12 +465,20 @@ export class ItemModal {
       const iconUrl = recycleItem ? dataLoader.getIconUrl(recycleItem) : '';
       const itemName = typeof recycleItem?.name === 'object' ? recycleItem.name[this.language] ?? recycleItem.name[DEFAULT_LANGUAGE] : recycleItem?.name || itemId;
       const rarity = translationEngine.get(`rarity.${(recycleItem?.rarity || 'common').toLowerCase()}`);
-
+      const itemDecisionData = this.config.decisionEngine.getItemWithDecisions(recycleItem.id);
       return `
         <div class="recipe-item" data-item-id="${itemId}" title="${itemName}">
           <div class="recipe-item__icon recipe-item__icon--${rarity}">
             <img src="${iconUrl}" alt="${itemName}" onerror="this.outerHTML='<div class=\\'recipe-item__placeholder\\'>?</div>'" />
             <span class="recipe-item__quantity">${quantity}</span>
+            ${
+              itemDecisionData &&
+                `
+                <div class="recipe-item__decision decision-badge decision-badge--${itemDecisionData.decisionData.decision}">
+                  <span class="decision-badge__icon">${this.getDecisionIcon(itemDecisionData.decisionData.decision)}</span>
+                </div>
+                `
+            }
           </div>
         </div>
       `;

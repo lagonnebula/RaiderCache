@@ -61,7 +61,7 @@ class App {
       );
 
       // Get items with decisions
-      this.allItems = this.decisionEngine.getItemsWithDecisions(this.userProgress);
+      this.allItems = this.decisionEngine.calculateItemsDecisions(this.userProgress);
 
       // Initialize search engine
       this.searchEngine = new SearchEngine(this.allItems, translationEngine.getCurrentLanguage());
@@ -380,7 +380,7 @@ class App {
     StorageManager.saveUserProgress(this.userProgress);
 
     // Recalculate decisions
-    this.allItems = this.decisionEngine.getItemsWithDecisions(this.userProgress);
+    this.allItems = this.decisionEngine.calculateItemsDecisions(this.userProgress);
     this.searchEngine.updateIndex(this.allItems);
 
     // Re-apply filters and render

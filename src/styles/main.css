@@ -1542,6 +1542,19 @@ body {
   border: 1px solid var(--color-accent-cyan);
 }
 
+.recipe-item__decision {
+  position: absolute;
+  top: 0px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.85);
+  color: var(--color-text-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.5rem;
+  font-weight: bold;
+  border: 1px solid var(--color-accent-cyan);
+}
+
 .recipe-description {
   font-size: 0.875rem;
   color: var(--color-text-secondary);

@@ -13,6 +13,7 @@ export class DecisionEngine {
   private quests: Quest[];
   private projects: Project[];
   private reverseRecipeIndex: Map<string, string[]>;
+  private itemsWithDecisions: Map<string, Item & { decisionData: DecisionReason; }>;
 
   constructor(
     items: Item[],
@@ -25,6 +26,7 @@ export class DecisionEngine {
     this.quests = quests;
     this.projects = projects;
     this.reverseRecipeIndex = buildReverseRecipeIndex(items);
+    this.itemsWithDecisions = new Map();
   }
 
   public getItemsThatRecycleInto(item: Item): Item[] {
@@ -399,21 +401,24 @@ export class DecisionEngine {
     return item.name[translationEngine.getCurrentLanguage()] || item.name[DEFAULT_LANGUAGE];
   }
 
+  public getItemWithDecisions(itemId: string): Item & { decisionData: DecisionReason } | undefined {
+    return this.itemsWithDecisions?.get(itemId);
+  }
+
   /**
    * Get all items with their decisions
    */
-  getItemsWithDecisions(userProgress: UserProgress): Array<Item & { decisionData: DecisionReason }> {
-    const itemsWithDecisions: Array<Item & { decisionData: DecisionReason }> = [];
-
+  public calculateItemsDecisions(userProgress: UserProgress): Array<Item & { decisionData: DecisionReason }> {
     for (const item of this.items.values()) {
       const decisionData = this.getDecision(item, userProgress);
-      itemsWithDecisions.push({
+      const itemWithDecision = {
         ...item,
         decisionData
-      });
+      };
+      this.itemsWithDecisions.set(item.id, itemWithDecision);
     }
 
-    return itemsWithDecisions;
+    return Array.from(this.itemsWithDecisions.values());
   }
 
   /**
