@@ -217,6 +217,7 @@ export class ItemModal {
                 ${this.renderMapRecommendations(item.foundIn, item.id)}
               </div>
             ` : ''}
+            ${this.renderObtainByRecycling(item)}
           </div>
 
           ${item.tip ? `
@@ -435,6 +436,47 @@ export class ItemModal {
         <h3>${translationEngine.get(`item-modal.recycle.title`)}</h3>
         <div class="recipe-grid">
           ${recycleItems}
+        </div>
+      </div>
+    `;
+  }
+
+  private renderObtainByRecycling(item: Item): string {
+    const itemRecycleInto = this.config.decisionEngine.getItemsThatRecycleInto(item);
+    //Group item by type by quantity
+    itemRecycleInto.sort((a, b) => {
+      if (a.type === b.type) {
+        return (b.recyclesInto?.[item.id] || 0) - (a.recyclesInto?.[item.id] || 0);
+      }
+      return a.type < b.type ? -1 : 1;
+    });
+    const recycleBy = itemRecycleInto.map((recycleItem) => {
+      const itemId = recycleItem.id;
+      const quantity = recycleItem.recyclesInto?.[item.id];
+      const iconUrl = recycleItem ? dataLoader.getIconUrl(recycleItem) : '';
+      const itemName = typeof recycleItem?.name === 'object' ? recycleItem.name[this.language] ?? recycleItem.name[DEFAULT_LANGUAGE] : recycleItem?.name || itemId;
+      const rarity = translationEngine.get(`rarity.${(recycleItem?.rarity || 'common').toLowerCase()}`);
+
+      return `
+        <div class="recipe-item" data-item-id="${itemId}" title="${itemName}">
+          <div class="recipe-item__icon recipe-item__icon--${rarity}">
+            <img src="${iconUrl}" alt="${itemName}" onerror="this.outerHTML='<div class=\\'recipe-item__placeholder\\'>?</div>'" />
+            <span class="recipe-item__quantity">${quantity}</span>
+          </div>
+        </div>
+      `;
+    })
+    .join('');
+
+    if(itemRecycleInto.length <= 0){
+      return "";
+    }
+    return `
+      <div class="item-modal__section">
+        <h3>${translationEngine.get(`item-modal.obtained_by_recycling.title`)}</h3>
+        <p class="recipe-description">${translationEngine.get(`item-modal.obtained_by_recycling.description`, [itemRecycleInto.length.toString()])}</p>
+        <div class="recipe-grid">
+          ${recycleBy}
         </div>
       </div>
     `;

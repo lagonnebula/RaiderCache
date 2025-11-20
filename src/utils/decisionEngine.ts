@@ -27,6 +27,10 @@ export class DecisionEngine {
     this.reverseRecipeIndex = buildReverseRecipeIndex(items);
   }
 
+  public getItemsThatRecycleInto(item: Item): Item[] {
+    return Array.from(this.items.values()).filter(itemToRecycle => itemToRecycle.recyclesInto && Object.keys(itemToRecycle.recyclesInto).includes(item.id));
+  }
+
   /**
    * Finalize decision by checking if recycle value exceeds item value
    */
