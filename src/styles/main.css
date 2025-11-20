@@ -120,6 +120,41 @@ body {
   flex-shrink: 0;
 }
 
+/* Header settings button */
+.profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border: 1px solid var(--color-accent-cyan);
+  background: var(--color-accent-cyan);
+  color: var(--color-bg-dark);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.profile-btn__icon {
+  width: 2rem;
+  height: 2rem;
+   object-fit: contain;
+  background: var(--color-bg-dark);
+  mask: url('/assets/settings.svg') center/contain no-repeat;
+  -webkit-mask: url('/assets/settings.svg') center/contain no-repeat;
+  transition: background var(--transition-fast);
+}
+
+.profile-btn:hover {
+  background: transparent;
+}
+
+.profile-btn:hover .profile-btn__icon {
+  background: var(--color-text-muted);
+}
+
 .header-lang {
   display: flex;
   gap: var(--spacing-sm);

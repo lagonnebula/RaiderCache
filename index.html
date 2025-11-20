@@ -49,6 +49,9 @@
               <select id="lang-selector" class="lang-select">
               </select>
             </div>
+            <button id="profile-btn" class="profile-btn" type="button" aria-label="Open settings">
+              <span class="profile-btn__icon" aria-hidden="true"></span>
+            </button>
           </div>
         </div>
       </div>
@@ -60,7 +63,7 @@
           <!-- Sidebar with Filters and Workshop Progress -->
           <aside class="sidebar">
             <!-- Filters -->
-            <div class="controls collapsible collapsed">
+            <div class="controls collapsible">
               <h3 class="collapsible-header" data-target="search-content">
                 <span data-i18n="controls.filters">Filters</span>
                 <span class="collapse-icon">▼</span>
@@ -91,17 +94,6 @@
                     </label>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <!-- Workshop Progress -->
-            <div class="controls collapsible">
-              <h3 class="collapsible-header" data-target="workshop-content">
-                <span data-i18n="controls.workshop">Hideout Progress</span>
-                <span class="collapse-icon">▼</span>
-              </h3>
-              <div class="collapsible-content" id="workshop-content">
-                <div class="workshop-grid" id="workshop-grid"></div>
               </div>
             </div>
 
@@ -142,6 +134,13 @@
     <div class="modal-content"></div>
   </div>
 
+  <!-- Profile Modal -->
+  <div class="modal" id="profile-modal">
+    <div class="modal-overlay"></div>
+    <div class="modal-content profile-modal-content"></div>
+  </div>
+
   <script type="module" src="/src/main.ts"></script>
+  <link rel="stylesheet" href="/src/styles/profile.css">
 </body>
 </html>

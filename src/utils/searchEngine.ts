@@ -48,10 +48,12 @@ export class SearchEngine {
         { name: 'type', weight: 1.5 },
         { name: 'id', weight: 0.5 }
       ],
-      threshold: 0.3,
+      threshold: 0.2,
       ignoreDiacritics: true,
       includeScore: true,
       useExtendedSearch: true,
+      isCaseSensitive: false,
+      includeMatches: false, //debug
     });
   }
 
