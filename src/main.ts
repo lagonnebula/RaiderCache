@@ -9,6 +9,7 @@ import { RECYCLE_DECISIONS, type Item, type RecycleDecision } from './types/Item
 import { ItemCard } from './components/ItemCard';
 import { ItemModal } from './components/ItemModal';
 import { ZoneFilter } from './components/ZoneFilter';
+import { ProfileModal } from './components/ProfileModal';
 
 class App {
   private gameData!: GameData;
@@ -18,6 +19,7 @@ class App {
   private allItems: SearchableItem[] = [];
   private filteredItems: SearchableItem[] = [];
   private zoneFilter!: ZoneFilter;
+  private profileModal?: ProfileModal;
 
   private searchInput!: HTMLInputElement;
   private itemsGrid!: HTMLElement;
@@ -127,8 +129,8 @@ class App {
     // Lang toggle
     this.initializeLanguageToggle();
 
-    // Initialize workshop tracker
-    this.initializeWorkshopTracker();
+    // Profile button
+    this.initializeProfileButton();
 
     // Initialize zone filter
     this.initializeZoneFilter();
@@ -292,6 +294,13 @@ class App {
     });
   }
 
+  private initializeProfileButton() {
+    const btn = document.getElementById('profile-btn');
+    if (!btn) return;
+
+    btn.addEventListener('click', () => this.openProfile());
+  }
+
   private initializeViewToggle() {
     const toggleBtns = document.querySelectorAll('.toggle-btn');
     const isMobile = window.innerWidth <= 768;
@@ -324,68 +333,44 @@ class App {
     });
   }
 
-  private initializeWorkshopTracker() {
-    const workshopGrid = document.getElementById('workshop-grid');
-    if (!workshopGrid) return;
-
-    // Filter out stash and workbench as they're not relevant for this tool
-    const relevantModules = this.gameData.hideoutModules.filter(
-      module => module.id !== 'stash' && module.id !== 'workbench'
-    );
-
-    relevantModules.forEach(module => {
-      const currentLevel = this.userProgress.hideoutLevels[module.id] ?? 0;
-      const moduleName = module.name[translationEngine.getCurrentLanguage()] || module.name[DEFAULT_LANGUAGE];
-
-      const getLevelText = (level: number) => {
-        return level === 0 ? translationEngine.get('controls.workshop.not_unlock') : translationEngine.get('controls.workshop.levels', [level.toString(), module.maxLevel.toString()]);
-      };
-
-      const card = document.createElement('div');
-      card.className = 'workshop-card';
-      card.innerHTML = `
-        <h3>${moduleName}</h3>
-        <div class="workshop-card__level">
-          <span class="workshop-card__level-text">${getLevelText(currentLevel)}</span>
-          <input
-            type="range"
-            min="0"
-            max="${module.maxLevel}"
-            value="${currentLevel}"
-            data-module-id="${module.id}"
-            class="workshop-card__slider"
-          />
-        </div>
-      `;
-
-      const slider = card.querySelector('.workshop-card__slider') as HTMLInputElement;
-      const levelText = card.querySelector('.workshop-card__level-text') as HTMLSpanElement;
-
-      slider.addEventListener('input', (e) => {
-        const newLevel = parseInt((e.target as HTMLInputElement).value);
-        levelText.textContent = getLevelText(newLevel);
+  private openProfile() {
+    if (!this.profileModal) {
+      this.profileModal = new ProfileModal({
+        hideoutModules: this.gameData.hideoutModules,
+        quests: this.gameData.quests,
+        userProgress: this.userProgress,
+        currentLanguage: translationEngine.getCurrentLanguage() as SupportedLanguage,
+        onSave: (progress) => {
+          this.userProgress = progress;
+          StorageManager.saveUserProgress(this.userProgress);
+          this.allItems = this.decisionEngine.calculateItemsDecisions(this.userProgress);
+          this.searchEngine.updateIndex(this.allItems);
+          this.applyFilters();
+          this.updateStats();
+        },
+        onLanguageChange: (lang) => this.handleLanguageChange(lang)
       });
+    } else {
+      this.profileModal.updateState(
+        this.userProgress,
+        this.gameData.hideoutModules,
+        this.gameData.quests,
+        translationEngine.getCurrentLanguage() as SupportedLanguage
+      );
+    }
 
-      slider.addEventListener('change', (e) => {
-        const newLevel = parseInt((e.target as HTMLInputElement).value);
-        this.updateWorkshopLevel(module.id, newLevel);
-      });
-
-      workshopGrid.appendChild(card);
-    });
+    this.profileModal.show();
   }
 
-  private updateWorkshopLevel(moduleId: string, level: number) {
-    this.userProgress.hideoutLevels[moduleId] = level;
-    StorageManager.saveUserProgress(this.userProgress);
-
-    // Recalculate decisions
-    this.allItems = this.decisionEngine.calculateItemsDecisions(this.userProgress);
-    this.searchEngine.updateIndex(this.allItems);
-
-    // Re-apply filters and render
+  private handleLanguageChange(lang: SupportedLanguage) {
+    translationEngine.setLanguage(lang);
+    this.searchEngine.setLanguage(lang);
+    const headerLangSelect = document.getElementById('lang-selector') as HTMLSelectElement | null;
+    if (headerLangSelect) {
+      headerLangSelect.value = lang;
+    }
     this.applyFilters();
-    this.updateStats();
+    this.render();
   }
 
   private initializeZoneFilter() {
