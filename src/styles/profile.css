@@ -31,6 +31,7 @@
 }
 
 .profile-modal__body section {
+    border: 1px solid var(--color-bg-elevated);
   background: rgba(0, 0, 0, 0.2);
   border-radius: var(--radius-md);
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
@@ -63,12 +64,6 @@
   color: #9ca3af;
   font-size: 13px;
   max-width: 340px;
-}
-
-.profile-section {
-  border: 1px solid #1f2937;
-  border-radius: 12px;
-  background: #0c1327;
 }
 
 .profile-modules-grid {

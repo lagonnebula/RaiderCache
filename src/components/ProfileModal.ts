@@ -190,6 +190,9 @@ export class ProfileModal {
               <span class="collapse-indicator">▸</span>
             </div>
             <div class="profile-section__content" data-collapse-content>
+              <span>
+                ${translationEngine.get(`profile.display.select-lang`)}
+              </span>
               <select class="lang-select profile-lang-select" data-profile-lang>
                 ${SUPPORTED_LANGUAGES.map(l => `<option value="${l}" ${l === this.workingLanguage ? 'selected' : ''}>${l.toUpperCase()}</option>`).join('')}
               </select>
