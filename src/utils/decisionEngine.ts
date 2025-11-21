@@ -52,9 +52,12 @@ export class DecisionEngine {
    * Main decision logic - determines if player should keep, recycle, or sell an item
    */
   getDecision(item: Item, userProgress: UserProgress): DecisionReason {
+    let lastDecision: DecisionReason | null = null;
+    let isKeep = false;
     // Priority 0: Seeds - ALWAYS KEEP (valuable currency)
     if (item.id === 'assorted_seeds') {
-      return this.finalizeDecision(item, {
+      isKeep = true;
+      lastDecision = this.finalizeDecision(item, {
         decision: 'keep',
         reasons: translationEngine.get<Array<string>>('decision.reason.seeds')
       });
@@ -62,96 +65,135 @@ export class DecisionEngine {
 
     // Priority 1: Legendaries - ALWAYS KEEP
     if (item.rarity?.toLowerCase() === 'legendary') {
-      return this.finalizeDecision(item, {
-        decision: 'keep',
-        reasons: translationEngine.get<Array<string>>('decision.reason.legendary')
-      });
+      isKeep = true;
+      if(isKeep && lastDecision){
+        lastDecision.reasons.push(...translationEngine.get<Array<string>>('decision.reason.legendary'));
+      }else{
+        lastDecision = this.finalizeDecision(item, {
+          decision: 'keep',
+          reasons: translationEngine.get<Array<string>>('decision.reason.legendary')
+        });
+      }
     }
 
     // Priority 2: Blueprints - ALWAYS REVIEW
     if (item.type === 'Blueprint') {
-      return this.finalizeDecision(item, {
-        decision: 'situational',
-        reasons: translationEngine.get<Array<string>>('decision.reason.blueprint')
-      });
+      if(!isKeep){
+        return this.finalizeDecision(item, {
+          decision: 'situational',
+          reasons: translationEngine.get<Array<string>>('decision.reason.blueprint')
+        });
+      }
     }
 
     // Priority 3: All weapons - ALWAYS REVIEW
     if (item.type === 'Weapon' || WeaponGrouper.isWeaponVariant(item)) {
-      return this.finalizeDecision(item, {
-        decision: 'situational',
-        reasons: translationEngine.get<Array<string>>('decision.reason.weapon')
-      });
+      if(!isKeep){
+        return this.finalizeDecision(item, {
+          decision: 'situational',
+          reasons: translationEngine.get<Array<string>>('decision.reason.weapon')
+        });
+      }
     }
 
     // Priority 4: Ammunition - ALWAYS REVIEW
     if (item.type === 'Ammunition') {
-      return this.finalizeDecision(item, {
-        decision: 'situational',
-        reasons: translationEngine.get<Array<string>>('decision.reason.ammo')
-      });
+      if(!isKeep){
+        return this.finalizeDecision(item, {
+          decision: 'situational',
+          reasons: translationEngine.get<Array<string>>('decision.reason.ammo')
+        });
+      }
     }
 
     // Priority 5: Quick Use items (grenades, healing items, etc.) - ALWAYS REVIEW
     if (item.type === 'Quick Use') {
-      return this.finalizeDecision(item, {
-        decision: 'situational',
-        reasons: translationEngine.get<Array<string>>('decision.reason.quick-use')
-      });
+      if(!isKeep){
+        return this.finalizeDecision(item, {
+          decision: 'situational',
+          reasons: translationEngine.get<Array<string>>('decision.reason.quick-use')
+        });
+      }
     }
 
     // Priority 6: Keys - ALWAYS REVIEW
     if (item.type === 'Key') {
-      return this.finalizeDecision(item, {
-        decision: 'situational',
-        reasons: translationEngine.get<Array<string>>('decision.reason.key')
-      });
+      if(!isKeep){
+        return this.finalizeDecision(item, {
+          decision: 'situational',
+          reasons: translationEngine.get<Array<string>>('decision.reason.key')
+        });
+      }
+    }
+
+    // Priority 6: Keys - ALWAYS REVIEW
+    if (item.type === 'Key') {
+      if(!isKeep){
+        return this.finalizeDecision(item, {
+          decision: 'situational',
+          reasons: translationEngine.get<Array<string>>('decision.reason.key')
+        });
+      }
     }
 
     // Priority 7: Quest items (ALWAYS KEEP)
     const questUse = this.isUsedInActiveQuests(item, userProgress);
     if (questUse.isUsed) {
-      return this.finalizeDecision(item, {
-        decision: 'keep',
-        reasons: translationEngine.get<Array<string>>('decision.reason.quest_item', [questUse.questNames.join(', ')]),
-        dependencies: questUse.questNames
-      });
+      if(isKeep && lastDecision){
+        lastDecision.reasons.push(...translationEngine.get<Array<string>>('decision.reason.quest_item', [questUse.questNames.join(', ')]));
+      }else{
+        isKeep = true;
+        lastDecision = this.finalizeDecision(item, {
+          decision: 'keep',
+          reasons: translationEngine.get<Array<string>>('decision.reason.quest_item', [questUse.questNames.join(', ')])
+        });
+      }
     }
 
     // Priority 8: Project items (KEEP if projects not completed)
     const projectUse = this.isUsedInActiveProjects(item, userProgress);
     if (projectUse.isUsed) {
-      return this.finalizeDecision(item, {
-        decision: 'keep',
-        reasons: translationEngine.get<Array<string>>('decision.reason.project_item', [projectUse.projectNames.join(', ')]),
-        dependencies: projectUse.projectNames
-      });
+      if(isKeep && lastDecision){
+        lastDecision.reasons.push(...translationEngine.get<Array<string>>('decision.reason.project_item', [projectUse.projectNames.join(', ')]));
+      }else{
+        isKeep = true;
+        lastDecision = this.finalizeDecision(item, {
+          decision: 'keep',
+          reasons: translationEngine.get<Array<string>>('decision.reason.project_item', [projectUse.projectNames.join(', ')]),
+          dependencies: projectUse.projectNames
+        });
+      }
     }
 
     // Priority 9: Hideout upgrade materials (KEEP if needed)
     const upgradeUse = this.isNeededForUpgrades(item, userProgress);
     if (upgradeUse.isNeeded) {
-      return this.finalizeDecision(item, {
-        decision: 'keep',
-        reasons: translationEngine.get<Array<string>>('decision.reason.upgrade_material', [upgradeUse.moduleNames.join(', ')]),
-        dependencies: upgradeUse.moduleNames
-      });
+      if(isKeep && lastDecision){
+        lastDecision.reasons.push(...translationEngine.get<Array<string>>('decision.reason.upgrade_material', [upgradeUse.moduleNames.join(', ')]));
+      }else{
+        isKeep = true;
+        lastDecision = this.finalizeDecision(item, {
+          decision: 'keep',
+          reasons: translationEngine.get<Array<string>>('decision.reason.upgrade_material', [upgradeUse.moduleNames.join(', ')]),
+          dependencies: upgradeUse.moduleNames
+        });
+      }
     }
 
     // Priority 10: Crafting materials (SITUATIONAL based on rarity and use)
     const craftingValue = this.evaluateCraftingValue(item);
-    if (craftingValue.isValuable) {
+    if (craftingValue.isValuable && !isKeep) {
       const craftingQuality = craftingValue.isRare ? 'rare' : 'common';
       const details = translationEngine.get(`decision.crating_material.rarity`, [craftingQuality.substring(0, 1).toUpperCase() + craftingQuality.substring(1)]);
-      return this.finalizeDecision(item, {
+      lastDecision = this.finalizeDecision(item, {
         decision: 'situational',
         reasons: translationEngine.get<Array<string>>('decision.reason.crafting_material', [craftingValue.recipeCount.toString(), details]),
       });
     }
 
     // Priority 11: High value trinkets/items (SELL OR RECYCLE)
-    if (this.isHighValueTrinket(item)) {
-      return this.finalizeDecision(item, {
+    if (this.isHighValueTrinket(item) && !isKeep) {
+      lastDecision = this.finalizeDecision(item, {
         decision: 'sell_or_recycle',
         reasons: translationEngine.get<Array<string>>('decision.reason.high_value_trinket', [item.value.toString()]),
       });
@@ -159,10 +201,10 @@ export class DecisionEngine {
 
     // Priority 12: Items that recycle into valuable materials (SELL OR RECYCLE)
     const recycleData = item.recyclesInto || item.salvagesInto || item.crafting;
-    if (recycleData && Object.keys(recycleData).length > 0) {
+    if (recycleData && Object.keys(recycleData).length > 0 && !isKeep) {
       const recycleValue = this.evaluateRecycleValue(item);
       if (recycleValue.isValuable) {
-        return this.finalizeDecision(item, {
+        lastDecision = this.finalizeDecision(item, {
           decision: 'sell_or_recycle',
           reasons: translationEngine.get<Array<string>>('decision.reason.item_recycle', [recycleValue.description, recycleValue.estimatedValue.toString(), item.value.toString()]),
         });
@@ -170,18 +212,21 @@ export class DecisionEngine {
     }
 
     // Priority 13: Rare/Epic items (SITUATIONAL - player decision)
-    if (item.rarity && ['rare', 'epic'].includes(item.rarity.toLowerCase())) {
-      return this.finalizeDecision(item, {
+    if (item.rarity && ['rare', 'epic'].includes(item.rarity.toLowerCase()) && !isKeep) {
+      lastDecision = this.finalizeDecision(item, {
         decision: 'situational',
         reasons: translationEngine.get<Array<string>>('decision.reason.item_rarity', [item.rarity]),
       });
     }
 
     // Default: Safe to sell or recycle
-    return this.finalizeDecision(item, {
-      decision: 'sell_or_recycle',
-      reasons: translationEngine.get<Array<string>>('decision.reason.other'),
-    });
+    if(!isKeep){
+      lastDecision = this.finalizeDecision(item, {
+        decision: 'sell_or_recycle',
+        reasons: translationEngine.get<Array<string>>('decision.reason.other'),
+      });
+    }
+    return lastDecision!;
   }
 
   /**
