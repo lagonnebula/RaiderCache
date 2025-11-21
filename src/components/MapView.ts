@@ -38,7 +38,7 @@ export class MapView {
     this.mapData = await mapLoader.load();
 
     // Determine which map to show first
-    const relevantMaps = getRelevantMaps(this.config.item);
+    const relevantMaps = getRelevantMaps(this.config.item, this.mapData);
     if (relevantMaps.length > 0) {
       // Find map with most markers
       const mapMarkerCounts = relevantMaps.map(mapName => {
@@ -63,7 +63,7 @@ export class MapView {
     this.container = container;
     const { item } = this.config;
     const itemName = item.name[translationEngine.getCurrentLanguage()] || item.name[DEFAULT_LANGUAGE] || item.id;
-    const relevantMaps = getRelevantMaps(item);
+    const relevantMaps = getRelevantMaps(item, this.mapData);
 
     if (relevantMaps.length === 0) {
       container.innerHTML = `

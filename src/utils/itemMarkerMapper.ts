@@ -1,5 +1,5 @@
 import type { Item } from '../types/Item';
-import type { MapMarker } from './mapLoader';
+import type { MapData, MapMarker } from './mapLoader';
 
 /**
  * Determine which marker subcategories are relevant for a given item
@@ -93,14 +93,11 @@ export function getRelevantMarkerSubcategories(item: Item): string[] {
  * Determine which maps are relevant for a given item
  * Returns all maps by default
  */
-export function getRelevantMaps(item: Item): string[] {
-  // Hideout vendor items don't have map locations
+export function getRelevantMaps(item: Item, mapData: MapData[]): string[] {
   if (item.foundIn?.includes('Exodus') || item.foundIn?.includes('Hideout')) {
     return [];
   }
-
-  // Default: show all raid maps
-  return ['dam', 'buried-city', 'spaceport', 'blue-gate'];
+  return mapData.map((map)=> map.map);
 }
 
 /**

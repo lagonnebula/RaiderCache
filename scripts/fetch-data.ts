@@ -592,6 +592,7 @@ async function discoverMapTilePattern(mapName: string): Promise<{ baseUrl: strin
       // Current known patterns
       { url: `https://cdn.metaforge.app/arc-raiders/maps/${name}-new/0/0_0.webp`, baseUrl: `https://cdn.metaforge.app/arc-raiders/maps/${name}-new`, separator: '_', label: `${name}-new` },
       { url: `https://cdn.metaforge.app/arc-raiders/maps/${name}/v2/0/0/0.webp`, baseUrl: `https://cdn.metaforge.app/arc-raiders/maps/${name}/v2`, separator: '/', label: `${name}/v2` },
+      { url: `https://cdn.metaforge.app/arc-raiders/maps/${name}/v2/default/0/0_0.webp`, baseUrl: `https://cdn.metaforge.app/arc-raiders/maps/${name}/v2/default`, separator: '_', label: `${name}/v2/default` },
       { url: `https://cdn.metaforge.app/arc-raiders/maps/${name}/20251030/0/0/0.webp`, baseUrl: `https://cdn.metaforge.app/arc-raiders/maps/${name}/20251030`, separator: '/', label: `${name}/20251030` },
 
       // Try version numbers 1-10
@@ -638,31 +639,11 @@ async function discoverMapTilePattern(mapName: string): Promise<{ baseUrl: strin
   return null;
 }
 
-async function downloadMapTiles(mapNames: string[]): Promise<number> {
-  console.log('📥 Downloading map tiles from MetaForge CDN...');
-  console.log('  🔄 Re-downloading all tiles to check for updates...');
+async function getTiles(mapName: string, pattern: { baseUrl: string; separator: string }, maxZoom: number, floor?: string) {
 
-  const maxZoom = 4;
-
-  let totalDownloaded = 0;
-  let totalSkipped = 0;
-  let totalFailed = 0;
-
-  for (const mapName of mapNames) {
-    console.log(`\n  📍 Processing ${mapName}...`);
-
-    // Discover the correct tile pattern dynamically
-    const pattern = await discoverMapTilePattern(mapName);
-
-    if (!pattern) {
-      console.warn(`  ⚠️  Skipping ${mapName} - no valid tile pattern found`);
-      totalFailed++;
-      continue;
-    }
-
-    const config = { name: mapName, ...pattern, maxZoom };
-    const mapTilesDir = path.join(TILES_DIR, config.name);
-
+  const config = { name: mapName, ...pattern, maxZoom };
+    const mapTilesDir = floor ? path.join(TILES_DIR, config.name, floor) : path.join(TILES_DIR, config.name);
+  config.baseUrl = floor ? `${config.baseUrl}/${floor}` : config.baseUrl;
     if (!fs.existsSync(mapTilesDir)) {
       fs.mkdirSync(mapTilesDir, { recursive: true });
     }
@@ -716,8 +697,45 @@ async function downloadMapTiles(mapNames: string[]): Promise<number> {
         }
       }
     }
+    return { mapDownloaded, mapSkipped };
+}
 
-    console.log(`  ✅ ${config.name}: ${mapDownloaded} tiles downloaded, ${mapSkipped} already existed`);
+async function downloadMapTiles(mapNames: string[]): Promise<number> {
+  console.log('📥 Downloading map tiles from MetaForge CDN...');
+  console.log('  🔄 Re-downloading all tiles to check for updates...');
+
+  const maxZoom = 4;
+
+  let totalDownloaded = 0;
+  let totalSkipped = 0;
+  let totalFailed = 0;
+
+  for (const mapName of mapNames) {
+    console.log(`\n  📍 Processing ${mapName}...`);
+
+    // Discover the correct tile pattern dynamically
+    const pattern = await discoverMapTilePattern(mapName);
+
+    if (!pattern) {
+      console.warn(`  ⚠️  Skipping ${mapName} - no valid tile pattern found`);
+      totalFailed++;
+      continue;
+    }
+
+    let mapDownloaded = 0;
+    let mapSkipped = 0;
+    if(mapName === 'stella-montis') {
+      const topLevel = await getTiles(mapName, pattern, maxZoom, 'default');
+      const b2 = await getTiles(mapName, pattern, maxZoom, 'b2');
+      mapDownloaded = topLevel.mapDownloaded + b2.mapDownloaded;
+      mapSkipped = topLevel.mapSkipped + b2.mapSkipped;
+    } else {
+      const topLevel = await getTiles(mapName, pattern, maxZoom);
+      mapDownloaded = topLevel.mapDownloaded;
+      mapSkipped = topLevel.mapSkipped;
+    }
+
+    console.log(`  ✅ ${mapName}: ${mapDownloaded} tiles downloaded, ${mapSkipped} already existed`);
     totalDownloaded += mapDownloaded;
     totalSkipped += mapSkipped;
   }
