@@ -31,7 +31,12 @@ const RESIZED_MARKER = path.join(ICONS_DIR, '.resized');
 
 //Custom ID override
 const METAFORGE_TO_ARD: Record<string, string> = {
-  "spring" : "steel_spring"
+  "spring" : "steel_spring",
+  "sentinel-part" : "sentinel_firing_core"
+};
+
+const METAFORGE_HIDEOUT_CORRECTION: Record<string, string> = {
+  "sentinel-firing-core" : "sentinel-part"
 };
 
 const ARD_TO_METAFORGE = Object.fromEntries(Object.entries(METAFORGE_TO_ARD).map(([key, value]) => [value, key]));
@@ -42,6 +47,10 @@ const convertArcRaiderDataIdIntoMetaforgeId = (arcraiderdataId: string): string 
 
 const convertMetaforgeIdIntoArcRaiderDataId = (metaforgeId: string): string => {
   return METAFORGE_TO_ARD[metaforgeId] ?? metaforgeId.replace(/-/g, "_").replace("recipe", "blueprint");
+}
+
+const fixMetaforgeHideoutData = (metaforgeId: string) : string => {
+  return METAFORGE_HIDEOUT_CORRECTION[metaforgeId] ?? metaforgeId;
 }
 
 interface MetaForgeItem {
@@ -429,7 +438,7 @@ async function fetchAllHideoutModules(): Promise<HideoutModule[]> {
           requirementItemIds: level.requirementItemIds.map((requirementItem) => {
             return {
               ...requirementItem,
-              itemId: convertArcRaiderDataIdIntoMetaforgeId(requirementItem.itemId)
+              itemId: fixMetaforgeHideoutData(convertArcRaiderDataIdIntoMetaforgeId(requirementItem.itemId))
             }
           })
         }
@@ -834,7 +843,8 @@ function getItemsTranslation(metaforge: MetaForgeItem | MetaForgeQuest, type: st
   const filenameTest = path.join(ARCRAIDERS_DATA_DIR, type, arcraidersDataId.replace("_blueprint", "") + '.json');
 
   if(!isArcRaiderDataFileExist(filename) && !isArcRaiderDataFileExist(filenameTest)){
-    fs.writeFileSync(path.join("./scripts/tmp", 'missing_translation.csv'), `${metaforge.id};${type};${metaforge.name};no_file\n`, { flag: 'a' });
+    console.log(`${metaforge.id};${type};${metaforge.name};no_file`);
+    // fs.writeFileSync(path.join("./scripts/tmp", 'missing_translation.csv'), `${metaforge.id};${type};${metaforge.name};no_file\n`, { flag: 'a' });
     return {
       name : { en : metaforge.name },
       description : { en : metaforge.description || '' },
